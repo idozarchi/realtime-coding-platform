@@ -19,7 +19,6 @@ const CodeBlock = () => {
     const [loading, setLoading] = useState(false);
     const socketRef = useRef(null);
     const hasReceivedRoomState = useRef(false);
-    const isFirstUserRef = useRef(true);
 
     // Initialize socket connection and handle role assignment
     useEffect(() => {
@@ -30,13 +29,11 @@ const CodeBlock = () => {
         socket.emit('join-room', { roomId: id });
 
         // Handle role assignment
-        socket.on('role-assigned', (data) => {
-            console.log('Role assigned:', data.role);
-            if (data.role) {
-                setRole(data.role);
-                if (data.role === 'mentor') {
-                    setShowSolution(true);
-                }
+        socket.on('role-assigned', (role) => {
+            console.log('Role assigned:', role);
+            setRole(role);
+            if (role === 'mentor') {
+                setShowSolution(true);
             }
         });
 
@@ -53,6 +50,12 @@ const CodeBlock = () => {
         // Handle room state updates
         socket.on('room-state', (data) => {
             console.log('Received room state:', data);
+            if (data.role) {
+                setRole(data.role);
+                if (data.role === 'mentor') {
+                    setShowSolution(true);
+                }
+            }
             setStudentCount(data.studentCount || 0);
             if (data.currentCode) {
                 setCode(data.currentCode);
@@ -79,17 +82,6 @@ const CodeBlock = () => {
         socket.on('solution-success', () => {
             console.log('Solution success received');
             setShowSuccess(true);
-        });
-
-        // Check if we're the first user in the room
-        socket.on('connect', () => {
-            console.log('Socket connected');
-            if (isFirstUserRef.current) {
-                console.log('First user in room, assigning mentor role');
-                setRole('mentor');
-                setShowSolution(true);
-                isFirstUserRef.current = false;
-            }
         });
 
         return () => {
