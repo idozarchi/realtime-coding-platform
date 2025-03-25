@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Button from './Button';
-import CreateBlockForm from './CreateBlockForm';
+import Button from '../../ui/Button';
+import CreateBlockForm from '../CreateBlockForm/CreateBlockForm';
 import './Lobby.css'; // Import the CSS file
 
 const Lobby = () => {

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import io from 'socket.io-client';
 import Editor from '@monaco-editor/react';
+import Button from '../../ui/Button';
 import './CodeBlock.css';
 
 const CodeBlock = () => {
@@ -173,38 +174,68 @@ const CodeBlock = () => {
         <div className="code-block-container">
             <div className="code-block-header">
                 <h1>{codeBlock.name}</h1>
-                <div className="role-indicator">
-                    Role: {role === 'mentor' ? 'Mentor (Tom)' : 'Student'}
+                <div className="role-badge">
+                    {role === 'mentor' ? 'Mentor' : 'Student'}
                 </div>
                 <div className="student-count">
                     Students in room: {studentCount}
                 </div>
-                {role === 'mentor' && (
-                    <button 
-                        className="solution-toggle-btn"
-                        onClick={handleSolutionToggle}
-                    >
-                        {showSolution ? 'Hide Solution' : 'Show Solution'}
-                    </button>
-                )}
             </div>
             
             <div className="editor-container">
-                <Editor
-                    height="70vh"
-                    defaultLanguage="javascript"
-                    value={showSolution ? codeBlock.solution : code}
-                    onChange={handleCodeChange}
-                    theme="vs-dark"
-                    options={{
-                        readOnly: role === 'mentor' || showSolution,
-                        minimap: { enabled: false },
-                        fontSize: 14,
-                        lineNumbers: 'on',
-                        scrollBeyond: false,
-                    }}
-                />
+                <div className="editor-wrapper">
+                    <div className="editor-header">
+                        <div className="editor-title">Code Editor</div>
+                        <div className="editor-status">
+                            {/* Placeholder for editor status */}
+                        </div>
+                    </div>
+                    <textarea
+                        ref={editorRef}
+                        value={code}
+                        onChange={handleCodeChange}
+                        readOnly={role === 'student'}
+                        className="code-editor"
+                        placeholder="Start coding here..."
+                    />
+                </div>
+
+                <div className="solution-container">
+                    <div className="solution-header">
+                        <div className="solution-title">Solution</div>
+                        <Button
+                            variant="solution"
+                            onClick={handleSolutionToggle}
+                        >
+                            {showSolution ? 'Hide Solution' : 'Show Solution'}
+                        </Button>
+                    </div>
+                    {showSolution && (
+                        <pre className="solution-code">
+                            {codeBlock.solution}
+                        </pre>
+                    )}
+                </div>
             </div>
+
+            {role === 'student' && (
+                <div className="student-controls">
+                    <Button
+                        variant="primary"
+                        onClick={() => {}}
+                        disabled={loading}
+                    >
+                        Reset Code
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {}}
+                        disabled={loading}
+                    >
+                        Submit Solution
+                    </Button>
+                </div>
+            )}
 
             {showSuccess && role !== 'mentor' && (
                 <div className="success-overlay">
