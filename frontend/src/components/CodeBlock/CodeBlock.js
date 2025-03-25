@@ -19,118 +19,80 @@ const CodeBlock = () => {
     const [loading, setLoading] = useState(false);
     const socketRef = useRef();
     const hasReceivedRoomState = useRef(false);
-    const editorRef = useRef(null);
 
     useEffect(() => {
         const fetchCodeBlock = async () => {
             try {
-                console.log('Fetching code block from:', `${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`);
-                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`, {
-                    withCredentials: true,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`);
                 setCodeBlock(response.data);
-                // Only set initial code if we haven't received room state yet
+                // Only set initial code if we haven't received any updates yet
                 if (!hasReceivedRoomState.current) {
                     setCode(response.data.initialCode);
                     setStudentCode(response.data.initialCode);
                 }
             } catch (error) {
                 console.error('Error fetching code block:', error);
+                navigate('/');
             }
         };
 
         fetchCodeBlock();
+    }, [id, navigate]);
 
-        // Initialize socket connection
-        const socketUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-        console.log('Connecting to socket server:', socketUrl);
-        socketRef.current = io(socketUrl, {
-            withCredentials: true,
-            transports: ['websocket']
-        });
-        socketRef.current.emit('join-room', id);
+    useEffect(() => {
+        socketRef.current = io(process.env.REACT_APP_API_URL);
 
-        socketRef.current.on('role-assigned', (assignedRole) => {
-            console.log('Role assigned:', assignedRole);
-            setRole(assignedRole);
+        socketRef.current.emit('join-room', { roomId: id });
+
+        socketRef.current.on('role-assigned', (data) => {
+            setRole(data.role);
+            console.log('Role assigned:', data.role);
         });
 
-        socketRef.current.on('room-state', (state) => {
-            console.log('Received room state:', state);
-            hasReceivedRoomState.current = true;
-            setRole(state.role);
-            setStudentCount(state.studentCount);
-            if (state.currentCode) {
-                console.log('Setting current code from room state:', state.currentCode);
-                setCode(state.currentCode);
-                setStudentCode(state.currentCode);
-            } else if (codeBlock) {
-                console.log('No current code in room, setting initial code');
-                setCode(codeBlock.initialCode);
-                setStudentCode(codeBlock.initialCode);
+        socketRef.current.on('room-state', (data) => {
+            console.log('Received room state:', data);
+            setRole(data.role);
+            setStudentCount(data.studentCount);
+            if (data.currentCode) {
+                setCode(data.currentCode);
+                setStudentCode(data.currentCode);
+                hasReceivedRoomState.current = true;
             }
         });
 
-        socketRef.current.on('code-update', (newCode) => {
-            console.log('Received code update:', newCode);
-            if (newCode) {
-                setCode(newCode);
-                setStudentCode(newCode);
+        socketRef.current.on('code-update', (data) => {
+            console.log('Received code update:', data);
+            if (role === 'student') {
+                setCode(data.code);
             }
         });
 
-        socketRef.current.on('student-count', (count) => {
-            setStudentCount(count);
+        socketRef.current.on('student-count', (data) => {
+            console.log('Student count updated:', data);
+            setStudentCount(data.count);
         });
 
         socketRef.current.on('mentor-left', () => {
-            console.log('Mentor left the room, disconnecting and redirecting');
-            
-            // Store initial code before disconnecting
-            const initialCode = codeBlock?.initialCode || '';
-            
-            // Reset all state
-            setCode(initialCode);
-            setStudentCode(initialCode);
+            console.log('Mentor left the room');
             setRole(null);
-            setStudentCount(0);
-            setShowSuccess(false);
-            setShowSolution(false);
-            
-            // Show a message
-            alert('The mentor has left the room. You will be redirected to the lobby.');
-            
-            // Disconnect socket after state is reset
-            if (socketRef.current) {
-                socketRef.current.disconnect();
-            }
-            
-            // Navigate and reload
+            setCode('');
+            setStudentCode('');
             navigate('/');
-            window.location.href = '/';
         });
 
         socketRef.current.on('solution-success', () => {
+            console.log('Solution success received');
             setShowSuccess(true);
         });
 
         return () => {
-            socketRef.current.disconnect();
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
         };
-    }, [id, navigate]);
+    }, [id, navigate, role]);
 
-    // Hide success message when toggling solution view
-    useEffect(() => {
-        if (showSolution) {
-            setShowSuccess(false);
-        }
-    }, [showSolution]);
-
-    const handleCodeChange = async (event) => {
-        const value = event.target.value;
+    const handleCodeChange = async (value) => {
         setCode(value);
         // Only emit updates if not in mentor mode
         if (role !== 'mentor') {
@@ -160,13 +122,6 @@ const CodeBlock = () => {
 
     const handleSolutionToggle = () => {
         setShowSolution(!showSolution);
-        if (!showSolution) {
-            // When showing solution, store current student code
-            setStudentCode(code);
-        } else {
-            // When hiding solution, restore student code
-            setCode(studentCode);
-        }
     };
 
     const handleReset = () => {
@@ -197,22 +152,28 @@ const CodeBlock = () => {
                     Students in room: {studentCount}
                 </div>
             </div>
-            
+
             <div className="editor-container">
                 <div className="editor-wrapper">
                     <div className="editor-header">
                         <div className="editor-title">Code Editor</div>
                         <div className="editor-status">
-                            {/* Placeholder for editor status */}
+                            {socketRef.current?.connected ? 'Connected' : 'Disconnected'}
                         </div>
                     </div>
-                    <textarea
-                        ref={editorRef}
-                        value={code}
+                    <Editor
+                        height="70vh"
+                        defaultLanguage="javascript"
+                        value={showSolution ? codeBlock.solution : code}
                         onChange={handleCodeChange}
-                        readOnly={role === 'student'}
-                        className="code-editor"
-                        placeholder="Start coding here..."
+                        theme="vs-dark"
+                        options={{
+                            readOnly: role === 'mentor' || showSolution,
+                            minimap: { enabled: false },
+                            fontSize: 14,
+                            lineNumbers: 'on',
+                            scrollBeyond: false,
+                        }}
                     />
                 </div>
 
@@ -254,18 +215,8 @@ const CodeBlock = () => {
             )}
 
             {showSuccess && role !== 'mentor' && (
-                <div className="success-overlay">
-                    <div className="success-content">
-                        <span className="success-emoji">😊</span>
-                        <h2>Congratulations!</h2>
-                        <p>You've successfully completed the challenge!</p>
-                        <button 
-                            className="back-to-lobby-btn"
-                            onClick={() => navigate('/')}
-                        >
-                            Back to Lobby
-                        </button>
-                    </div>
+                <div className="success-message">
+                    Congratulations! Your solution matches the expected output!
                 </div>
             )}
         </div>
