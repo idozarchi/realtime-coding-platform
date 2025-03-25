@@ -11,12 +11,16 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3002",
-    methods: ["GET", "POST"]
+    origin: [process.env.FRONTEND_URL, "http://localhost:3002", "https://realtime-coding-platform-xi.vercel.app"],
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
-app.use(cors());
+app.use(cors({
+  origin: [process.env.FRONTEND_URL, "http://localhost:3002", "https://realtime-coding-platform-xi.vercel.app"],
+  credentials: true
+}));
 app.use(express.json());
 app.use('/api/codeblocks', codeBlockRoutes);
 

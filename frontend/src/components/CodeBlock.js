@@ -36,7 +36,12 @@ const CodeBlock = () => {
         fetchCodeBlock();
 
         // Initialize socket connection
-        socketRef.current = io(process.env.REACT_APP_API_URL);
+        const socketUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+        console.log('Connecting to socket server:', socketUrl);
+        socketRef.current = io(socketUrl, {
+            withCredentials: true,
+            transports: ['websocket']
+        });
         socketRef.current.emit('join-room', id);
 
         socketRef.current.on('role-assigned', (assignedRole) => {
