@@ -1,0 +1,54 @@
+.create-block-form {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.create-block-form h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.error-message {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-group textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+} 

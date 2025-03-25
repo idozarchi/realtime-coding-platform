@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Button from './Button';
+import CreateBlockForm from './CreateBlockForm';
 import './Lobby.css'; // Import the CSS file
 
 const Lobby = () => {
@@ -57,54 +59,19 @@ const Lobby = () => {
     <div className="lobby-container">
       <h1>Choose code block</h1>
       
-      <button 
-        className="create-block-btn"
-        onClick={() => setShowCreateForm(true)}
-      >
+      <Button onClick={() => setShowCreateForm(true)}>
         Create New Code Block
-      </button>
+      </Button>
 
       {showCreateForm && (
-        <div className="create-block-form">
-          <h2>Create New Code Block</h2>
-          {error && <div className="error-message">{error}</div>}
-          <form onSubmit={handleCreateBlock}>
-            <div className="form-group">
-              <label>Name:</label>
-              <input
-                type="text"
-                value={newBlock.name}
-                onChange={(e) => setNewBlock({...newBlock, name: e.target.value})}
-                required
-                placeholder="Enter code block name"
-              />
-            </div>
-            <div className="form-group">
-              <label>Initial Code:</label>
-              <textarea
-                value={newBlock.initialCode}
-                onChange={(e) => setNewBlock({...newBlock, initialCode: e.target.value})}
-                required
-                placeholder="Enter initial code"
-              />
-            </div>
-            <div className="form-group">
-              <label>Solution:</label>
-              <textarea
-                value={newBlock.solution}
-                onChange={(e) => setNewBlock({...newBlock, solution: e.target.value})}
-                required
-                placeholder="Enter solution code"
-              />
-            </div>
-            <div className="form-buttons">
-              <button type="submit" disabled={loading}>
-                {loading ? 'Creating...' : 'Create'}
-              </button>
-              <button type="button" onClick={() => setShowCreateForm(false)}>Cancel</button>
-            </div>
-          </form>
-        </div>
+        <CreateBlockForm
+          newBlock={newBlock}
+          setNewBlock={setNewBlock}
+          onSubmit={handleCreateBlock}
+          onCancel={() => setShowCreateForm(false)}
+          error={error}
+          loading={loading}
+        />
       )}
 
       <div className="code-blocks-list">
