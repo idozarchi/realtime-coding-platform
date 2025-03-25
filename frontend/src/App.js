@@ -6,12 +6,14 @@ import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <Routes>
-        <Route path="/" element={<Lobby />} />
-        <Route path="/code-block/:id" element={<CodeBlock />} />
-      </Routes>
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<Lobby />} />
+          <Route path="/code-block/:id" element={<CodeBlock />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

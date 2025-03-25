@@ -16,8 +16,10 @@ const CodeBlock = () => {
     const [studentCount, setStudentCount] = useState(0);
     const [showSuccess, setShowSuccess] = useState(false);
     const [showSolution, setShowSolution] = useState(false);
+    const [loading, setLoading] = useState(false);
     const socketRef = useRef();
     const hasReceivedRoomState = useRef(false);
+    const editorRef = useRef(null);
 
     useEffect(() => {
         const fetchCodeBlock = async () => {
@@ -127,7 +129,8 @@ const CodeBlock = () => {
         }
     }, [showSolution]);
 
-    const handleCodeChange = async (value) => {
+    const handleCodeChange = async (event) => {
+        const value = event.target.value;
         setCode(value);
         // Only emit updates if not in mentor mode
         if (role !== 'mentor') {
@@ -163,6 +166,19 @@ const CodeBlock = () => {
         } else {
             // When hiding solution, restore student code
             setCode(studentCode);
+        }
+    };
+
+    const handleReset = () => {
+        setCode(codeBlock.initialCode);
+        setStudentCode(codeBlock.initialCode);
+        setShowSuccess(false);
+    };
+
+    const handleSubmit = () => {
+        if (code === codeBlock.solution) {
+            setShowSuccess(true);
+            socketRef.current.emit('solution-success', { roomId: id });
         }
     };
 
@@ -222,14 +238,14 @@ const CodeBlock = () => {
                 <div className="student-controls">
                     <Button
                         variant="primary"
-                        onClick={() => {}}
+                        onClick={handleReset}
                         disabled={loading}
                     >
                         Reset Code
                     </Button>
                     <Button
                         variant="primary"
-                        onClick={() => {}}
+                        onClick={handleSubmit}
                         disabled={loading}
                     >
                         Submit Solution
