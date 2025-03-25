@@ -32,9 +32,6 @@ const CodeBlock = () => {
         socket.on('role-assigned', (data) => {
             console.log('Role assigned:', data.role);
             setRole(data.role);
-            if (data.role === 'mentor') {
-                setShowSolution(true);
-            }
         });
 
         // Handle mentor leaving
