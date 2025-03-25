@@ -34,14 +34,12 @@ const CodeBlock = () => {
             setRole(data.role);
         });
 
-        // Handle mentor leaving
-        socket.on('mentor-left', () => {
-            console.log('Mentor left the room');
-            alert('The mentor has left the room. You will be redirected to the lobby.');
-            setRole(null);
-            setCode('');
-            setStudentCode('');
-            navigate('/');
+        // Handle code updates from other students
+        socket.on('code-update', (data) => {
+            console.log('Received code update:', data);
+            if (role === 'student') {
+                setStudentCode(data.code);
+            }
         });
 
         // Handle room state updates
@@ -50,38 +48,30 @@ const CodeBlock = () => {
             setStudentCount(data.studentCount || 0);
             if (data.currentCode) {
                 setStudentCode(data.currentCode);
-                setCode(data.currentCode);
                 hasReceivedRoomState.current = true;
             }
         });
 
-        // Handle code updates from other students
-        socket.on('code-update', (data) => {
-            console.log('Received code update:', data);
-            if (role === 'student') {
-                setStudentCode(data.code);
-                setCode(data.code);
-            }
-        });
-
-        // Handle student count updates
-        socket.on('student-count', (data) => {
-            console.log('Student count updated:', data);
-            setStudentCount(data.count || 0);
-        });
-
         // Handle solution success
         socket.on('solution-success', () => {
-            console.log('Solution success received');
             setShowSuccess(true);
         });
 
+        // Handle mentor leaving
+        socket.on('mentor-left', () => {
+            alert('Mentor has left the room. You will be redirected to the lobby.');
+            navigate('/');
+        });
+
+        // Handle student count updates
+        socket.on('student-count', (count) => {
+            setStudentCount(count);
+        });
+
         return () => {
-            if (socket) {
-                socket.disconnect();
-            }
+            socket.disconnect();
         };
-    }, [id, navigate]);
+    }, [id, navigate, role]);
 
     // Fetch code block data
     useEffect(() => {
@@ -109,7 +99,6 @@ const CodeBlock = () => {
 
         // Update local state
         setStudentCode(value);
-        setCode(value);
         
         // Emit code update to other users
         if (socketRef.current) {
@@ -134,10 +123,10 @@ const CodeBlock = () => {
         }
     };
 
-    const handleSolutionToggle = () => {
+    const handleShowSolution = () => {
         setShowSolution(!showSolution);
         if (!showSolution) {
-            setStudentCode(code);
+            setCode(codeBlock.solution);
         } else {
             setCode(studentCode);
         }
@@ -175,7 +164,7 @@ const CodeBlock = () => {
                 {role === 'mentor' && (
                     <Button
                         variant="solution"
-                        onClick={handleSolutionToggle}
+                        onClick={handleShowSolution}
                     >
                         {showSolution ? 'Hide Solution' : 'Show Solution'}
                     </Button>
