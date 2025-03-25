@@ -45,8 +45,12 @@ const CodeBlock = () => {
         socketRef.current.emit('join-room', { roomId: id });
 
         socketRef.current.on('role-assigned', (data) => {
-            setRole(data.role);
             console.log('Role assigned:', data.role);
+            setRole(data.role);
+            // If user is mentor, they should be in read-only mode
+            if (data.role === 'mentor') {
+                setShowSolution(true); // Show solution by default for mentor
+            }
         });
 
         socketRef.current.on('room-state', (data) => {
@@ -74,6 +78,7 @@ const CodeBlock = () => {
 
         socketRef.current.on('mentor-left', () => {
             console.log('Mentor left the room');
+            alert('The mentor has left the room. You will be redirected to the lobby.');
             setRole(null);
             setCode('');
             setStudentCode('');
@@ -93,23 +98,26 @@ const CodeBlock = () => {
     }, [id, navigate, role]);
 
     const handleCodeChange = async (value) => {
+        // Only allow code changes if not in mentor mode
+        if (role === 'mentor') {
+            return;
+        }
+
         setCode(value);
         // Only emit updates if not in mentor mode
-        if (role !== 'mentor') {
-            socketRef.current.emit('code-update', { roomId: id, code: value });
-            // Save current code to database
-            try {
-                await axios.put(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}/current-code`, {
-                    currentCode: value
-                }, {
-                    withCredentials: true,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-            } catch (error) {
-                console.error('Error saving current code:', error);
-            }
+        socketRef.current.emit('code-update', { roomId: id, code: value });
+        // Save current code to database
+        try {
+            await axios.put(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}/current-code`, {
+                currentCode: value
+            }, {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        } catch (error) {
+            console.error('Error saving current code:', error);
         }
         
         // Only check for solution match if not showing solution and not in mentor mode
@@ -176,7 +184,7 @@ const CodeBlock = () => {
                     onChange={handleCodeChange}
                     theme="vs-dark"
                     options={{
-                        readOnly: role === 'mentor' || showSolution,
+                        readOnly: role === 'mentor',
                         minimap: { enabled: false },
                         fontSize: 14,
                         lineNumbers: 'on',
