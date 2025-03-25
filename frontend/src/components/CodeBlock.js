@@ -16,14 +16,15 @@ const CodeBlock = () => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [showSolution, setShowSolution] = useState(false);
     const socketRef = useRef();
+    const hasReceivedRoomState = useRef(false);
 
     useEffect(() => {
         const fetchCodeBlock = async () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`);
                 setCodeBlock(response.data);
-                // Only set initial code if we haven't received any updates yet
-                if (!code) {
+                // Only set initial code if we haven't received room state yet
+                if (!hasReceivedRoomState.current) {
                     setCode(response.data.initialCode);
                     setStudentCode(response.data.initialCode);
                 }
@@ -43,6 +44,22 @@ const CodeBlock = () => {
             setRole(assignedRole);
         });
 
+        socketRef.current.on('room-state', (state) => {
+            console.log('Received room state:', state);
+            hasReceivedRoomState.current = true;
+            setRole(state.role);
+            setStudentCount(state.studentCount);
+            if (state.currentCode) {
+                console.log('Setting current code from room state:', state.currentCode);
+                setCode(state.currentCode);
+                setStudentCode(state.currentCode);
+            } else if (codeBlock) {
+                console.log('No current code in room, setting initial code');
+                setCode(codeBlock.initialCode);
+                setStudentCode(codeBlock.initialCode);
+            }
+        });
+
         socketRef.current.on('code-update', (newCode) => {
             console.log('Received code update:', newCode);
             if (newCode) {
@@ -59,6 +76,10 @@ const CodeBlock = () => {
             navigate('/');
         });
 
+        socketRef.current.on('solution-success', () => {
+            setShowSuccess(true);
+        });
+
         return () => {
             socketRef.current.disconnect();
         };
@@ -71,16 +92,26 @@ const CodeBlock = () => {
         }
     }, [showSolution]);
 
-    const handleCodeChange = (value) => {
+    const handleCodeChange = async (value) => {
         setCode(value);
         // Only emit updates if not in mentor mode
         if (role !== 'mentor') {
             socketRef.current.emit('code-update', { roomId: id, code: value });
+            // Save current code to database
+            try {
+                await axios.put(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}/current-code`, {
+                    currentCode: value
+                });
+            } catch (error) {
+                console.error('Error saving current code:', error);
+            }
         }
         
-        // Only check for solution match if not showing solution
-        if (!showSolution && codeBlock && value === codeBlock.solution) {
+        // Only check for solution match if not showing solution and not in mentor mode
+        if (!showSolution && role !== 'mentor' && codeBlock && value === codeBlock.solution) {
             setShowSuccess(true);
+            // Emit success event to all users in the room
+            socketRef.current.emit('solution-success', { roomId: id });
         }
     };
 
@@ -136,12 +167,18 @@ const CodeBlock = () => {
                 />
             </div>
 
-            {showSuccess && (
+            {showSuccess && role !== 'mentor' && (
                 <div className="success-overlay">
                     <div className="success-content">
                         <span className="success-emoji">😊</span>
                         <h2>Congratulations!</h2>
                         <p>You've successfully completed the challenge!</p>
+                        <button 
+                            className="back-to-lobby-btn"
+                            onClick={() => navigate('/')}
+                        >
+                            Back to Lobby
+                        </button>
                     </div>
                 </div>
             )}

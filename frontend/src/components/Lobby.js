@@ -11,6 +11,8 @@ const Lobby = () => {
     initialCode: '',
     solution: ''
   });
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,6 +22,7 @@ const Lobby = () => {
         setCodeBlocks(response.data);
       } catch (error) {
         console.error('Error fetching code blocks:', error);
+        setError('Failed to fetch code blocks. Please try again later.');
       }
     };
 
@@ -28,6 +31,9 @@ const Lobby = () => {
 
   const handleCreateBlock = async (e) => {
     e.preventDefault();
+    setError(null);
+    setLoading(true);
+
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/codeblocks`, newBlock);
       setCodeBlocks([...codeBlocks, response.data]);
@@ -35,6 +41,9 @@ const Lobby = () => {
       setNewBlock({ name: '', initialCode: '', solution: '' });
     } catch (error) {
       console.error('Error creating code block:', error);
+      setError(error.response?.data?.message || 'Failed to create code block. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,6 +61,7 @@ const Lobby = () => {
       {showCreateForm && (
         <div className="create-block-form">
           <h2>Create New Code Block</h2>
+          {error && <div className="error-message">{error}</div>}
           <form onSubmit={handleCreateBlock}>
             <div className="form-group">
               <label>Name:</label>
@@ -60,6 +70,7 @@ const Lobby = () => {
                 value={newBlock.name}
                 onChange={(e) => setNewBlock({...newBlock, name: e.target.value})}
                 required
+                placeholder="Enter code block name"
               />
             </div>
             <div className="form-group">
@@ -68,6 +79,7 @@ const Lobby = () => {
                 value={newBlock.initialCode}
                 onChange={(e) => setNewBlock({...newBlock, initialCode: e.target.value})}
                 required
+                placeholder="Enter initial code"
               />
             </div>
             <div className="form-group">
@@ -76,10 +88,13 @@ const Lobby = () => {
                 value={newBlock.solution}
                 onChange={(e) => setNewBlock({...newBlock, solution: e.target.value})}
                 required
+                placeholder="Enter solution code"
               />
             </div>
             <div className="form-buttons">
-              <button type="submit">Create</button>
+              <button type="submit" disabled={loading}>
+                {loading ? 'Creating...' : 'Create'}
+              </button>
               <button type="button" onClick={() => setShowCreateForm(false)}>Cancel</button>
             </div>
           </form>

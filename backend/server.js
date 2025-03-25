@@ -33,9 +33,24 @@ app.get("/", (req, res) => {
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  family: 4
+})
+.then(() => {
+  console.log("Connected to MongoDB successfully");
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+})
+.catch((err) => {
+  console.error("MongoDB connection error:", err);
+  process.exit(1);
+});
 
 // Socket.IO connection handling
 const rooms = new Map();
@@ -64,14 +79,15 @@ io.on('connection', (socket) => {
       const room = rooms.get(roomId);
       console.log(`Room ${roomId} already exists, assigning student role to ${socket.id}`);
       room.students.add(socket.id);
-      socket.emit('role-assigned', 'student');
       
-      // Send current code to new student if it exists
-      if (room.currentCode) {
-        console.log(`Sending current code to new student ${socket.id}:`, room.currentCode);
-        socket.emit('code-update', room.currentCode);
-      }
+      // Send current room state to the new user
+      socket.emit('room-state', {
+        role: 'student',
+        currentCode: room.currentCode,
+        studentCount: room.students.size
+      });
       
+      // Update student count for all users
       io.to(roomId).emit('student-count', room.students.size);
     }
   });
@@ -82,26 +98,33 @@ io.on('connection', (socket) => {
     if (rooms.has(roomId)) {
       const room = rooms.get(roomId);
       room.currentCode = code;
-      console.log(`Updated current code in room ${roomId}`);
+      console.log(`Updated current code in room ${roomId}:`, code);
     }
     // Broadcast to all other users in the room
     socket.to(roomId).emit('code-update', code);
   });
 
+  socket.on('solution-success', ({ roomId }) => {
+    console.log(`Solution success in room ${roomId}`);
+    // Broadcast success to all users in the room
+    io.to(roomId).emit('solution-success');
+  });
+
   socket.on('disconnect', () => {
-    // Clean up rooms when users disconnect
-    rooms.forEach((room, roomId) => {
+    console.log('User disconnected:', socket.id);
+    // Find and remove the user from their room
+    for (const [roomId, room] of rooms.entries()) {
       if (room.mentor === socket.id) {
-        // If mentor disconnects, notify all students and clear the room
+        console.log(`Mentor left room ${roomId}`);
         io.to(roomId).emit('mentor-left');
         rooms.delete(roomId);
-      } else if (room.students.has(socket.id)) {
+        break;
+      }
+      if (room.students.has(socket.id)) {
         room.students.delete(socket.id);
         io.to(roomId).emit('student-count', room.students.size);
+        break;
       }
-    });
+    }
   });
 });
-
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

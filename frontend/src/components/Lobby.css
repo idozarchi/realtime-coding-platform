@@ -35,6 +35,15 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.error-message {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
 .form-group {
     margin-bottom: 15px;
 }
@@ -76,6 +85,11 @@
 .form-buttons button[type="submit"] {
     background-color: #4CAF50;
     color: white;
+}
+
+.form-buttons button[type="submit"]:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
 }
 
 .form-buttons button[type="button"] {

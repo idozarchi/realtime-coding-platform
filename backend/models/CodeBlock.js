@@ -13,6 +13,10 @@ const codeBlockSchema = new mongoose.Schema({
   solution: {
     type: String,
     required: true
+  },
+  currentCode: {
+    type: String,
+    default: null
   }
 });
 
