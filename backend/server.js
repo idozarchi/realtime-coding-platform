@@ -9,19 +9,39 @@ const codeBlockRoutes = require('./routes/codeBlocks');
 
 const app = express();
 const server = http.createServer(app);
+
+// Define allowed origins
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:3000",
+  "https://realtime-coding-platform-xi.vercel.app",
+  "https://realtime-coding-platform-git-main-idos-projects-e7dca031.vercel.app"
+].filter(Boolean); // Remove any undefined values
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL,
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true
   }
 });
 
+// CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
 }));
+
 app.use(express.json());
 app.use('/api/codeblocks', codeBlockRoutes);
 
