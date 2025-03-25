@@ -60,6 +60,7 @@ const CodeBlock = () => {
             console.log('Received code update:', data);
             if (role === 'student') {
                 setCode(data.code);
+                setStudentCode(data.code);
             }
         });
 
@@ -107,6 +108,8 @@ const CodeBlock = () => {
         }
 
         setCode(value);
+        setStudentCode(value);
+        
         if (socketRef.current) {
             socketRef.current.emit('code-update', { roomId: id, code: value });
         }
