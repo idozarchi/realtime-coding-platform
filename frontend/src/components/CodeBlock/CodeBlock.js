@@ -28,12 +28,14 @@ const CodeBlock = () => {
         // Join room first
         socket.emit('join-room', { roomId: id });
 
-        // Handle role assignment
+        // Handle role assignment - this should be the only place where role is set
         socket.on('role-assigned', (data) => {
             console.log('Role assigned:', data.role);
-            setRole(data.role);
-            if (data.role === 'mentor') {
-                setShowSolution(true);
+            if (data.role) {
+                setRole(data.role);
+                if (data.role === 'mentor') {
+                    setShowSolution(true);
+                }
             }
         });
 
@@ -47,10 +49,9 @@ const CodeBlock = () => {
             navigate('/');
         });
 
-        // Handle room state updates
+        // Handle room state updates - but don't update role here
         socket.on('room-state', (data) => {
             console.log('Received room state:', data);
-            setRole(data.role);
             setStudentCount(data.studentCount || 0);
             if (data.currentCode) {
                 setCode(data.currentCode);
