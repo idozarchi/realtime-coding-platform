@@ -19,6 +19,7 @@ const CodeBlock = () => {
     const [loading, setLoading] = useState(false);
     const socketRef = useRef(null);
     const hasReceivedRoomState = useRef(false);
+    const isFirstUserRef = useRef(true);
 
     // Initialize socket connection and handle role assignment
     useEffect(() => {
@@ -28,7 +29,7 @@ const CodeBlock = () => {
         // Join room first
         socket.emit('join-room', { roomId: id });
 
-        // Handle role assignment - this should be the only place where role is set
+        // Handle role assignment
         socket.on('role-assigned', (data) => {
             console.log('Role assigned:', data.role);
             if (data.role) {
@@ -49,7 +50,7 @@ const CodeBlock = () => {
             navigate('/');
         });
 
-        // Handle room state updates - but don't update role here
+        // Handle room state updates
         socket.on('room-state', (data) => {
             console.log('Received room state:', data);
             setStudentCount(data.studentCount || 0);
@@ -78,6 +79,17 @@ const CodeBlock = () => {
         socket.on('solution-success', () => {
             console.log('Solution success received');
             setShowSuccess(true);
+        });
+
+        // Check if we're the first user in the room
+        socket.on('connect', () => {
+            console.log('Socket connected');
+            if (isFirstUserRef.current) {
+                console.log('First user in room, assigning mentor role');
+                setRole('mentor');
+                setShowSolution(true);
+                isFirstUserRef.current = false;
+            }
         });
 
         return () => {
