@@ -100,9 +100,11 @@ io.on('connection', (socket) => {
       existingRoom.students.add(socket.id);
       socket.join(roomId);
       
-      // Send current room state to the new user
+      // Send role assignment first
+      socket.emit('role-assigned', { role: 'student' });
+      
+      // Then send current room state to the new user
       socket.emit('room-state', {
-        role: 'student',
         currentCode: existingRoom.currentCode,
         studentCount: existingRoom.students.size
       });
