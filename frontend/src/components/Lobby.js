@@ -18,7 +18,13 @@ const Lobby = () => {
   useEffect(() => {
     const fetchCodeBlocks = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks`);
+        console.log('Fetching code blocks from:', `${process.env.REACT_APP_API_URL}/api/codeblocks`);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks`, {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
         setCodeBlocks(response.data);
       } catch (error) {
         console.error('Error fetching code blocks:', error);

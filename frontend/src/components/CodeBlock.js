@@ -21,7 +21,13 @@ const CodeBlock = () => {
     useEffect(() => {
         const fetchCodeBlock = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`);
+                console.log('Fetching code block from:', `${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`);
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`, {
+                    withCredentials: true,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
                 setCodeBlock(response.data);
                 // Only set initial code if we haven't received room state yet
                 if (!hasReceivedRoomState.current) {
@@ -106,6 +112,11 @@ const CodeBlock = () => {
             try {
                 await axios.put(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}/current-code`, {
                     currentCode: value
+                }, {
+                    withCredentials: true,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
             } catch (error) {
                 console.error('Error saving current code:', error);

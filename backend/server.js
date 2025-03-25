@@ -11,15 +11,28 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [process.env.FRONTEND_URL, "http://localhost:3002", "https://realtime-coding-platform-xi.vercel.app"],
-    methods: ["GET", "POST"],
-    credentials: true
+    origin: [
+      process.env.FRONTEND_URL,
+      "http://localhost:3002",
+      "https://realtime-coding-platform-xi.vercel.app",
+      "https://realtime-coding-platform-git-main-idos-projects-e7dca031.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"]
   }
 });
 
 app.use(cors({
-  origin: [process.env.FRONTEND_URL, "http://localhost:3002", "https://realtime-coding-platform-xi.vercel.app"],
-  credentials: true
+  origin: [
+    process.env.FRONTEND_URL,
+    "http://localhost:3002",
+    "https://realtime-coding-platform-xi.vercel.app",
+    "https://realtime-coding-platform-git-main-idos-projects-e7dca031.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(express.json());
 app.use('/api/codeblocks', codeBlockRoutes);
