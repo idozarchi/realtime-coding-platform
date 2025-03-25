@@ -82,11 +82,9 @@ io.on('connection', (socket) => {
   socket.on('join-room', (roomId) => {
     console.log(`User ${socket.id} joining room ${roomId}`);
     
-    // Check if room exists and has a mentor
     const existingRoom = rooms.get(roomId);
-    const isFirstUser = !existingRoom || !existingRoom.mentor;
     
-    if (isFirstUser) {
+    if (!existingRoom) {
       console.log(`First user in room ${roomId}, assigning mentor role to ${socket.id}`);
       rooms.set(roomId, {
         mentor: socket.id,
