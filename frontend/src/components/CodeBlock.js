@@ -85,6 +85,12 @@ const CodeBlock = () => {
 
         socketRef.current.on('mentor-left', () => {
             console.log('Mentor left the room, disconnecting and redirecting');
+            
+            // Immediately disconnect socket
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+            
             // Reset all state
             setCode(codeBlock.initialCode);
             setStudentCode(codeBlock.initialCode);
@@ -93,16 +99,12 @@ const CodeBlock = () => {
             setShowSuccess(false);
             setShowSolution(false);
             
-            // Immediately disconnect socket
-            if (socketRef.current) {
-                socketRef.current.disconnect();
-            }
-            
-            // Show a message before redirecting
+            // Show a message and redirect immediately
             alert('The mentor has left the room. You will be redirected to the lobby.');
-            
-            // Navigate back to lobby
             navigate('/');
+            
+            // Force reload the page to ensure clean state
+            window.location.href = '/';
         });
 
         socketRef.current.on('solution-success', () => {

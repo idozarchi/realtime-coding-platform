@@ -138,15 +138,17 @@ io.on('connection', (socket) => {
         console.log(`Mentor left room ${roomId}`);
         // Notify all users in the room before clearing
         io.to(roomId).emit('mentor-left');
-        // Clear the room state
-        rooms.delete(roomId);
+        
         // Force disconnect all students in the room
         room.students.forEach(studentId => {
           const studentSocket = io.sockets.sockets.get(studentId);
           if (studentSocket) {
-            studentSocket.leave(roomId);
+            studentSocket.disconnect(true); // Force disconnect the student
           }
         });
+        
+        // Clear the room state
+        rooms.delete(roomId);
         break;
       }
       if (room.students.has(socket.id)) {
