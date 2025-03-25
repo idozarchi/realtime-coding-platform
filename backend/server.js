@@ -23,7 +23,7 @@ app.use('/api/codeblocks', codeBlockRoutes);
 // Serve React frontend in production
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/build")));
-  app.get("http://10.10.1.120:3000", (req, res) => {
+  app.get("https://realtime-coding-platform-xi.vercel.app/", (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
   });
 }
