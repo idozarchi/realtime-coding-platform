@@ -39,6 +39,8 @@ const CodeBlock = () => {
             console.log('Received code update:', data);
             if (role === 'student') {
                 setStudentCode(data.code);
+            } else if (role === 'mentor' && !showSolution) {
+                setCode(data.code);
             }
         });
 
