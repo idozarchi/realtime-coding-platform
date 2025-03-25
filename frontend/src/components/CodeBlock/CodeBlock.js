@@ -130,7 +130,8 @@ const CodeBlock = () => {
         if (!showSolution) {
             setCode(codeBlock.solution);
         } else {
-            setCode(studentCode);
+            // When hiding solution, set code to the current code in the room
+            setCode(codeBlock.currentCode || codeBlock.initialCode);
         }
     };
 
