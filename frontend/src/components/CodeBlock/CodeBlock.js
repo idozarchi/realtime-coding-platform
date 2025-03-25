@@ -122,6 +122,13 @@ const CodeBlock = () => {
 
     const handleSolutionToggle = () => {
         setShowSolution(!showSolution);
+        if (!showSolution) {
+            // When showing solution, store current student code
+            setStudentCode(code);
+        } else {
+            // When hiding solution, restore student code
+            setCode(studentCode);
+        }
     };
 
     const handleReset = () => {
@@ -151,48 +158,31 @@ const CodeBlock = () => {
                 <div className="student-count">
                     Students in room: {studentCount}
                 </div>
+                {role === 'mentor' && (
+                    <Button
+                        variant="solution"
+                        onClick={handleSolutionToggle}
+                    >
+                        {showSolution ? 'Hide Solution' : 'Show Solution'}
+                    </Button>
+                )}
             </div>
 
             <div className="editor-container">
-                <div className="editor-wrapper">
-                    <div className="editor-header">
-                        <div className="editor-title">Code Editor</div>
-                        <div className="editor-status">
-                            {socketRef.current?.connected ? 'Connected' : 'Disconnected'}
-                        </div>
-                    </div>
-                    <Editor
-                        height="70vh"
-                        defaultLanguage="javascript"
-                        value={showSolution ? codeBlock.solution : code}
-                        onChange={handleCodeChange}
-                        theme="vs-dark"
-                        options={{
-                            readOnly: role === 'mentor' || showSolution,
-                            minimap: { enabled: false },
-                            fontSize: 14,
-                            lineNumbers: 'on',
-                            scrollBeyond: false,
-                        }}
-                    />
-                </div>
-
-                <div className="solution-container">
-                    <div className="solution-header">
-                        <div className="solution-title">Solution</div>
-                        <Button
-                            variant="solution"
-                            onClick={handleSolutionToggle}
-                        >
-                            {showSolution ? 'Hide Solution' : 'Show Solution'}
-                        </Button>
-                    </div>
-                    {showSolution && (
-                        <pre className="solution-code">
-                            {codeBlock.solution}
-                        </pre>
-                    )}
-                </div>
+                <Editor
+                    height="70vh"
+                    defaultLanguage="javascript"
+                    value={showSolution ? codeBlock.solution : code}
+                    onChange={handleCodeChange}
+                    theme="vs-dark"
+                    options={{
+                        readOnly: role === 'mentor' || showSolution,
+                        minimap: { enabled: false },
+                        fontSize: 14,
+                        lineNumbers: 'on',
+                        scrollBeyond: false,
+                    }}
+                />
             </div>
 
             {role === 'student' && (
@@ -215,8 +205,18 @@ const CodeBlock = () => {
             )}
 
             {showSuccess && role !== 'mentor' && (
-                <div className="success-message">
-                    Congratulations! Your solution matches the expected output!
+                <div className="success-overlay">
+                    <div className="success-content">
+                        <span className="success-emoji">😊</span>
+                        <h2>Congratulations!</h2>
+                        <p>You've successfully completed the challenge!</p>
+                        <Button
+                            variant="primary"
+                            onClick={() => navigate('/')}
+                        >
+                            Back to Lobby
+                        </Button>
+                    </div>
                 </div>
             )}
         </div>

@@ -1,44 +1,90 @@
 .code-block-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #1e1e1e;
+  color: #fff;
 }
 
 .code-block-header {
+  padding: 1rem 2rem;
+  background-color: #2d2d2d;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin-bottom: 20px;
 }
 
 .code-block-header h1 {
   margin: 0;
-  color: #333;
-  font-size: 2rem;
+  font-size: 1.8rem;
+  color: #007bff;
 }
 
 .role-badge {
-  background-color: #e3f2fd;
-  color: #1976d2;
+  background-color: #3498db;
   padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-weight: 500;
+  border-radius: 4px;
+  font-weight: bold;
 }
 
 .student-count {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background-color: #2ecc71;
   padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-weight: 500;
+  border-radius: 4px;
+  font-weight: bold;
 }
 
 .editor-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  flex: 1;
+  padding: 0 2rem;
   margin-bottom: 2rem;
-  height: 70vh;
+}
+
+.student-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.success-content {
+  text-align: center;
+  background-color: #2d2d2d;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.success-emoji {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.success-content h2 {
+  color: #2ecc71;
+  margin: 0 0 1rem 0;
+}
+
+.success-content p {
+  color: #fff;
+  margin: 0;
+  font-size: 1.2rem;
 }
 
 .editor-wrapper {
@@ -109,13 +155,6 @@
   overflow-x: auto;
 }
 
-.student-controls {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-top: 2rem;
-}
-
 .success-message {
   position: fixed;
   bottom: 2rem;
@@ -138,44 +177,6 @@
     transform: translate(-50%, 0);
     opacity: 1;
   }
-}
-
-.success-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.success-content {
-  text-align: center;
-  background-color: #2d2d2d;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.success-emoji {
-  font-size: 4rem;
-  display: block;
-  margin-bottom: 1rem;
-}
-
-.success-content h2 {
-  color: #2ecc71;
-  margin: 0 0 1rem 0;
-}
-
-.success-content p {
-  color: #fff;
-  margin: 0;
-  font-size: 1.2rem;
 }
 
 .back-to-lobby-btn {
