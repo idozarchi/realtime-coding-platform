@@ -1,0 +1,192 @@
+openapi: 3.0.0
+info:
+  title: Real-time Coding Platform API
+  version: 1.0.0
+  description: API documentation for the Real-time Coding Platform
+
+servers:
+  - url: https://realtime-coding-platform.onrender.com
+    description: Production server
+  - url: http://localhost:3001
+    description: Local development server
+
+components:
+  schemas:
+    CodeBlock:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier of the code block
+        name:
+          type: string
+          description: Name of the code block
+          example: "Async Case"
+        initialCode:
+          type: string
+          description: Initial code template
+          example: "// Write a function that fetches data from an API\nfunction fetchData() {\n  // Your code here\n}"
+        solution:
+          type: string
+          description: Solution code
+          example: "async function fetchData() {\n  try {\n    const response = await fetch('https://api.example.com/data');\n    const data = await response.json();\n    return data;\n  } catch (error) {\n    throw new Error('Failed to fetch data: ' + error.message);\n  }\n}"
+        currentCode:
+          type: string
+          description: Current code state in the room
+          nullable: true
+
+paths:
+  /api/codeblocks:
+    get:
+      summary: Get all code blocks
+      description: Retrieves a list of all available code blocks
+      responses:
+        '200':
+          description: List of code blocks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CodeBlock'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error fetching code blocks"
+
+    post:
+      summary: Create a new code block
+      description: Creates a new code block with initial code and solution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - initialCode
+                - solution
+              properties:
+                name:
+                  type: string
+                  example: "Async Case"
+                initialCode:
+                  type: string
+                  example: "// Write a function that fetches data from an API\nfunction fetchData() {\n  // Your code here\n}"
+                solution:
+                  type: string
+                  example: "async function fetchData() {\n  try {\n    const response = await fetch('https://api.example.com/data');\n    const data = await response.json();\n    return data;\n  } catch (error) {\n    throw new Error('Failed to fetch data: ' + error.message);\n  }\n}"
+      responses:
+        '201':
+          description: Code block created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeBlock'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error creating code block"
+
+  /api/codeblocks/{id}:
+    get:
+      summary: Get a specific code block
+      description: Retrieves a specific code block by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the code block
+      responses:
+        '200':
+          description: Code block details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeBlock'
+        '404':
+          description: Code block not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Code block not found"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error fetching code block"
+
+  /api/codeblocks/{id}/current-code:
+    put:
+      summary: Update current code
+      description: Updates the current code state for a specific code block
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the code block
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentCode
+              properties:
+                currentCode:
+                  type: string
+                  description: Current code state in the room
+      responses:
+        '200':
+          description: Current code updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeBlock'
+        '404':
+          description: Code block not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Code block not found"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error updating current code" 
