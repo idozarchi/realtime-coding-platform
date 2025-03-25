@@ -94,7 +94,7 @@ io.on('connection', (socket) => {
         currentCode: null
       });
       socket.join(roomId);
-      socket.emit('role-assigned', 'mentor');
+      socket.emit('role-assigned', { role: 'mentor' });
     } else {
       console.log(`Room ${roomId} already exists, assigning student role to ${socket.id}`);
       existingRoom.students.add(socket.id);
