@@ -121,7 +121,7 @@ io.on('connection', (socket) => {
       console.log(`Updated current code in room ${roomId}:`, code);
     }
     // Broadcast to all other users in the room
-    socket.to(roomId).emit('code-update', code);
+    socket.to(roomId).emit('code-update', { code });
   });
 
   socket.on('solution-success', ({ roomId }) => {

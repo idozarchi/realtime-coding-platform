@@ -107,13 +107,16 @@ const CodeBlock = () => {
             return;
         }
 
+        // Update local state
         setCode(value);
         setStudentCode(value);
         
+        // Emit code update to other users
         if (socketRef.current) {
             socketRef.current.emit('code-update', { roomId: id, code: value });
         }
         
+        // Save to database
         try {
             await axios.put(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}/current-code`, {
                 currentCode: value
@@ -122,6 +125,7 @@ const CodeBlock = () => {
             console.error('Error saving current code:', error);
         }
         
+        // Check for solution success
         if (!showSolution && role !== 'mentor' && codeBlock && value === codeBlock.solution) {
             setShowSuccess(true);
             if (socketRef.current) {
