@@ -26,7 +26,7 @@ const CodeBlock = () => {
         socketRef.current = socket;
 
         // Join room first
-        socket.emit('join-room', { roomId: id });
+        socket.emit('join-room', id);
 
         // Handle role assignment
         socket.on('role-assigned', (data) => {
