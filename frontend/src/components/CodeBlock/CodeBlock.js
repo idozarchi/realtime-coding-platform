@@ -49,8 +49,8 @@ const CodeBlock = () => {
             console.log('Received room state:', data);
             setStudentCount(data.studentCount || 0);
             if (data.currentCode) {
-                setCode(data.currentCode);
                 setStudentCode(data.currentCode);
+                setCode(data.currentCode);
                 hasReceivedRoomState.current = true;
             }
         });
@@ -59,8 +59,8 @@ const CodeBlock = () => {
         socket.on('code-update', (data) => {
             console.log('Received code update:', data);
             if (role === 'student') {
-                setCode(data.code);
                 setStudentCode(data.code);
+                setCode(data.code);
             }
         });
 
@@ -108,8 +108,8 @@ const CodeBlock = () => {
         }
 
         // Update local state
-        setCode(value);
         setStudentCode(value);
+        setCode(value);
         
         // Emit code update to other users
         if (socketRef.current) {
@@ -186,7 +186,7 @@ const CodeBlock = () => {
                 <Editor
                     height="70vh"
                     defaultLanguage="javascript"
-                    value={showSolution ? codeBlock.solution : code}
+                    value={showSolution ? codeBlock.solution : (role === 'student' ? studentCode : code)}
                     onChange={handleCodeChange}
                     theme="vs-dark"
                     options={{
