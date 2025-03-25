@@ -20,6 +20,41 @@ const CodeBlock = () => {
     const socketRef = useRef();
     const hasReceivedRoomState = useRef(false);
 
+    // First, establish socket connection and handle role assignment
+    useEffect(() => {
+        socketRef.current = io(process.env.REACT_APP_API_URL);
+        
+        // Join room first
+        socketRef.current.emit('join-room', { roomId: id });
+
+        // Handle role assignment
+        socketRef.current.on('role-assigned', (data) => {
+            console.log('Role assigned:', data.role);
+            setRole(data.role);
+            // If user is mentor, show solution by default
+            if (data.role === 'mentor') {
+                setShowSolution(true);
+            }
+        });
+
+        // Handle mentor leaving
+        socketRef.current.on('mentor-left', () => {
+            console.log('Mentor left the room');
+            alert('The mentor has left the room. You will be redirected to the lobby.');
+            setRole(null);
+            setCode('');
+            setStudentCode('');
+            navigate('/');
+        });
+
+        return () => {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+        };
+    }, [id, navigate]);
+
+    // Then, fetch code block data
     useEffect(() => {
         const fetchCodeBlock = async () => {
             try {
@@ -39,20 +74,11 @@ const CodeBlock = () => {
         fetchCodeBlock();
     }, [id, navigate]);
 
+    // Finally, handle room state and code updates
     useEffect(() => {
-        socketRef.current = io(process.env.REACT_APP_API_URL);
+        if (!socketRef.current) return;
 
-        socketRef.current.emit('join-room', { roomId: id });
-
-        socketRef.current.on('role-assigned', (data) => {
-            console.log('Role assigned:', data.role);
-            setRole(data.role);
-            // If user is mentor, they should be in read-only mode
-            if (data.role === 'mentor') {
-                setShowSolution(true); // Show solution by default for mentor
-            }
-        });
-
+        // Handle room state updates
         socketRef.current.on('room-state', (data) => {
             console.log('Received room state:', data);
             setRole(data.role);
@@ -64,6 +90,7 @@ const CodeBlock = () => {
             }
         });
 
+        // Handle code updates from other students
         socketRef.current.on('code-update', (data) => {
             console.log('Received code update:', data);
             if (role === 'student') {
@@ -71,31 +98,18 @@ const CodeBlock = () => {
             }
         });
 
+        // Handle student count updates
         socketRef.current.on('student-count', (data) => {
             console.log('Student count updated:', data);
             setStudentCount(data.count);
         });
 
-        socketRef.current.on('mentor-left', () => {
-            console.log('Mentor left the room');
-            alert('The mentor has left the room. You will be redirected to the lobby.');
-            setRole(null);
-            setCode('');
-            setStudentCode('');
-            navigate('/');
-        });
-
+        // Handle solution success
         socketRef.current.on('solution-success', () => {
             console.log('Solution success received');
             setShowSuccess(true);
         });
-
-        return () => {
-            if (socketRef.current) {
-                socketRef.current.disconnect();
-            }
-        };
-    }, [id, navigate, role]);
+    }, [role]);
 
     const handleCodeChange = async (value) => {
         // Only allow code changes if not in mentor mode
@@ -104,26 +118,21 @@ const CodeBlock = () => {
         }
 
         setCode(value);
-        // Only emit updates if not in mentor mode
+        // Emit code update to other users
         socketRef.current.emit('code-update', { roomId: id, code: value });
+        
         // Save current code to database
         try {
             await axios.put(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}/current-code`, {
                 currentCode: value
-            }, {
-                withCredentials: true,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
             });
         } catch (error) {
             console.error('Error saving current code:', error);
         }
         
-        // Only check for solution match if not showing solution and not in mentor mode
+        // Check for solution match
         if (!showSolution && role !== 'mentor' && codeBlock && value === codeBlock.solution) {
             setShowSuccess(true);
-            // Emit success event to all users in the room
             socketRef.current.emit('solution-success', { roomId: id });
         }
     };
