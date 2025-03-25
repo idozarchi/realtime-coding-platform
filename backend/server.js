@@ -81,31 +81,34 @@ io.on('connection', (socket) => {
 
   socket.on('join-room', (roomId) => {
     console.log(`User ${socket.id} joining room ${roomId}`);
-    socket.join(roomId);
     
-    // If this is the first user in the room, they become the mentor
-    if (!rooms.has(roomId)) {
+    // Check if room exists and has a mentor
+    const existingRoom = rooms.get(roomId);
+    const isFirstUser = !existingRoom || !existingRoom.mentor;
+    
+    if (isFirstUser) {
       console.log(`First user in room ${roomId}, assigning mentor role to ${socket.id}`);
       rooms.set(roomId, {
         mentor: socket.id,
         students: new Set(),
         currentCode: null
       });
+      socket.join(roomId);
       socket.emit('role-assigned', 'mentor');
     } else {
-      const room = rooms.get(roomId);
       console.log(`Room ${roomId} already exists, assigning student role to ${socket.id}`);
-      room.students.add(socket.id);
+      existingRoom.students.add(socket.id);
+      socket.join(roomId);
       
       // Send current room state to the new user
       socket.emit('room-state', {
         role: 'student',
-        currentCode: room.currentCode,
-        studentCount: room.students.size
+        currentCode: existingRoom.currentCode,
+        studentCount: existingRoom.students.size
       });
       
       // Update student count for all users
-      io.to(roomId).emit('student-count', room.students.size);
+      io.to(roomId).emit('student-count', existingRoom.students.size);
     }
   });
 
@@ -133,8 +136,10 @@ io.on('connection', (socket) => {
     for (const [roomId, room] of rooms.entries()) {
       if (room.mentor === socket.id) {
         console.log(`Mentor left room ${roomId}`);
-        io.to(roomId).emit('mentor-left');
+        // Clear the room state
         rooms.delete(roomId);
+        // Notify all users in the room
+        io.to(roomId).emit('mentor-left');
         break;
       }
       if (room.students.has(socket.id)) {

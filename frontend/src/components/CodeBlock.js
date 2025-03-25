@@ -84,7 +84,18 @@ const CodeBlock = () => {
         });
 
         socketRef.current.on('mentor-left', () => {
-            navigate('/');
+            console.log('Mentor left the room, resetting state');
+            // Reset all state
+            setCode(codeBlock.initialCode);
+            setStudentCode(codeBlock.initialCode);
+            setRole(null);
+            setStudentCount(0);
+            setShowSuccess(false);
+            setShowSolution(false);
+            // Navigate back to lobby after a short delay
+            setTimeout(() => {
+                navigate('/');
+            }, 2000);
         });
 
         socketRef.current.on('solution-success', () => {
