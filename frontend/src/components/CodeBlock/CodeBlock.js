@@ -20,85 +20,71 @@ const CodeBlock = () => {
     const socketRef = useRef(null);
     const hasReceivedRoomState = useRef(false);
 
-    // Initialize socket connection
+    // Initialize socket connection and handle role assignment
     useEffect(() => {
-        const initializeSocket = () => {
-            if (!socketRef.current) {
-                socketRef.current = io(process.env.REACT_APP_API_URL, {
-                    transports: ['websocket'],
-                    reconnection: true,
-                    reconnectionAttempts: 5
-                });
+        const socket = io(process.env.REACT_APP_API_URL);
+        socketRef.current = socket;
 
-                // Join room
-                socketRef.current.emit('join-room', { roomId: id });
+        // Join room first
+        socket.emit('join-room', { roomId: id });
 
-                // Handle role assignment
-                socketRef.current.on('role-assigned', (data) => {
-                    console.log('Role assigned:', data.role);
-                    if (data.role) {
-                        setRole(data.role);
-                        if (data.role === 'mentor') {
-                            setShowSolution(true);
-                        }
-                    }
-                });
-
-                // Handle mentor leaving
-                socketRef.current.on('mentor-left', () => {
-                    console.log('Mentor left the room');
-                    alert('The mentor has left the room. You will be redirected to the lobby.');
-                    setRole(null);
-                    setCode('');
-                    setStudentCode('');
-                    navigate('/');
-                });
-
-                // Handle room state updates
-                socketRef.current.on('room-state', (data) => {
-                    console.log('Received room state:', data);
-                    if (data.role) {
-                        setRole(data.role);
-                    }
-                    setStudentCount(data.studentCount || 0);
-                    if (data.currentCode) {
-                        setCode(data.currentCode);
-                        setStudentCode(data.currentCode);
-                        hasReceivedRoomState.current = true;
-                    }
-                });
-
-                // Handle code updates from other students
-                socketRef.current.on('code-update', (data) => {
-                    console.log('Received code update:', data);
-                    if (role === 'student') {
-                        setCode(data.code);
-                    }
-                });
-
-                // Handle student count updates
-                socketRef.current.on('student-count', (data) => {
-                    console.log('Student count updated:', data);
-                    setStudentCount(data.count || 0);
-                });
-
-                // Handle solution success
-                socketRef.current.on('solution-success', () => {
-                    console.log('Solution success received');
-                    setShowSuccess(true);
-                });
+        // Handle role assignment
+        socket.on('role-assigned', (data) => {
+            console.log('Role assigned:', data.role);
+            setRole(data.role);
+            if (data.role === 'mentor') {
+                setShowSolution(true);
             }
-        };
+        });
 
-        initializeSocket();
+        // Handle mentor leaving
+        socket.on('mentor-left', () => {
+            console.log('Mentor left the room');
+            alert('The mentor has left the room. You will be redirected to the lobby.');
+            setRole(null);
+            setCode('');
+            setStudentCode('');
+            navigate('/');
+        });
+
+        // Handle room state updates
+        socket.on('room-state', (data) => {
+            console.log('Received room state:', data);
+            setRole(data.role);
+            setStudentCount(data.studentCount || 0);
+            if (data.currentCode) {
+                setCode(data.currentCode);
+                setStudentCode(data.currentCode);
+                hasReceivedRoomState.current = true;
+            }
+        });
+
+        // Handle code updates from other students
+        socket.on('code-update', (data) => {
+            console.log('Received code update:', data);
+            if (role === 'student') {
+                setCode(data.code);
+            }
+        });
+
+        // Handle student count updates
+        socket.on('student-count', (data) => {
+            console.log('Student count updated:', data);
+            setStudentCount(data.count || 0);
+        });
+
+        // Handle solution success
+        socket.on('solution-success', () => {
+            console.log('Solution success received');
+            setShowSuccess(true);
+        });
 
         return () => {
-            if (socketRef.current) {
-                socketRef.current.disconnect();
-                socketRef.current = null;
+            if (socket) {
+                socket.disconnect();
             }
         };
-    }, [id, navigate, role]);
+    }, [id, navigate]);
 
     // Fetch code block data
     useEffect(() => {
