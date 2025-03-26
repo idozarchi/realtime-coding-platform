@@ -9,7 +9,7 @@ const setupSocketHandlers = (io) => {
     io.on('connection', (socket) => {
         console.log('User connected:', socket.id);
 
-        socket.on('join-room', ({ roomId }) => {
+        socket.on('join-room', (roomId) => {
             console.log(`User ${socket.id} joining room ${roomId}`);
             
             const existingRoom = rooms.get(roomId);
