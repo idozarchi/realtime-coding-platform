@@ -65,7 +65,6 @@ const CodeBlock = () => {
                 console.log('Received room state:', data);
                 setStudentCount(data.studentCount || 0);
                 if (data.currentCode) {
-                    // Update both states to ensure consistency
                     setStudentCode(data.currentCode);
                     setCode(data.currentCode);
                     hasReceivedRoomState.current = true;
@@ -96,7 +95,7 @@ const CodeBlock = () => {
                 socketRef.current.disconnect();
             }
         };
-    }, [id, navigate]); // Removed role and showSolution from dependencies
+    }, [id, navigate]); // Keep only id and navigate in dependencies
 
     // Fetch code block data
     useEffect(() => {
