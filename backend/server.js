@@ -13,8 +13,13 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:3000",
-        methods: ["GET", "POST"]
+        origin: [
+            process.env.FRONTEND_URL || "http://localhost:3000",
+            "https://realtime-coding-platform-xi.vercel.app",
+            "https://realtime-coding-platform-git-main-idos-projects-e7dca031.vercel.app"
+        ],
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 
@@ -23,7 +28,11 @@ connectDB();
 
 // Middleware
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: [
+        process.env.FRONTEND_URL || "http://localhost:3000",
+        "https://realtime-coding-platform-xi.vercel.app",
+        "https://realtime-coding-platform-git-main-idos-projects-e7dca031.vercel.app"
+    ],
     credentials: true
 }));
 app.use(express.json());
