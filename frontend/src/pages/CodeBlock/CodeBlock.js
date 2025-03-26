@@ -20,18 +20,20 @@ const CodeBlock = () => {
     const [showSolution, setShowSolution] = useState(false);
     const [loading, setLoading] = useState(false);
     const hasReceivedRoomState = useRef(false);
+    const roleRef = useRef(null);
+
+    // Update roleRef whenever role state changes
+    useEffect(() => {
+        roleRef.current = role;
+    }, [role]);
 
     const socketRef = useSocketConnection(
         id,
         (data) => {
-            console.log('Role assigned:', data.role);
-            setRole(data.role);
-        },
-        (data) => {
             console.log('Received code update:', data);
-            if (role === 'student') {
+            if (roleRef.current === 'student') {
                 setStudentCode(data.code);
-            } else if (role === 'mentor' && !showSolution) {
+            } else if (roleRef.current === 'mentor' && !showSolution) {
                 setCode(data.code);
             }
         },
@@ -50,6 +52,24 @@ const CodeBlock = () => {
         },
         (count) => setStudentCount(count)
     );
+
+    // Handle socket events directly
+    useEffect(() => {
+        const socket = socketRef.current;
+        if (!socket) return;
+
+        const handleRoleAssigned = (data) => {
+            console.log('Role assigned:', data.role);
+            setRole(data.role);
+            roleRef.current = data.role;
+        };
+
+        socket.on('role-assigned', handleRoleAssigned);
+
+        return () => {
+            socket.off('role-assigned', handleRoleAssigned);
+        };
+    }, [socketRef]);
 
     // Fetch code block data
     useEffect(() => {
@@ -71,7 +91,7 @@ const CodeBlock = () => {
     }, [id, navigate]);
 
     const handleCodeChange = async (value) => {
-        if (role === 'mentor') {
+        if (roleRef.current === 'mentor') {
             return;
         }
 
@@ -89,7 +109,7 @@ const CodeBlock = () => {
             console.error('Error saving current code:', error);
         }
         
-        if (!showSolution && role !== 'mentor' && codeBlock && value === codeBlock.solution) {
+        if (!showSolution && roleRef.current !== 'mentor' && codeBlock && value === codeBlock.solution) {
             setShowSuccess(true);
             if (socketRef.current) {
                 socketRef.current.emit('solution-success', { roomId: id });
