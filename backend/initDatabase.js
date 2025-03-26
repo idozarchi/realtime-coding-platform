@@ -1,9 +1,10 @@
 require('dotenv').config();
 const mongoose = require("mongoose");
-const CodeBlock = require("./models/CodeBlock"); // Assuming models are in a separate file
+const CodeBlock = require("./models/CodeBlock");
+const connectDB = require('./config/database');
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(async () => {
+// Connect to MongoDB and initialize database
+connectDB().then(async () => {
     console.log("Connected to MongoDB");
 
     const initialCodeBlocks = [
@@ -111,8 +112,21 @@ function processString(str) {
       }
     ];
 
-    await CodeBlock.insertMany(initialCodeBlocks);
-    console.log("Database initialized with code blocks");
-    process.exit();
-  })
-  .catch((err) => console.error("Database initialization error:", err));
+    try {
+        // Clear existing code blocks
+        await CodeBlock.deleteMany({});
+        console.log("Cleared existing code blocks");
+
+        // Insert new code blocks
+        const insertedBlocks = await CodeBlock.insertMany(initialCodeBlocks);
+        console.log(`Successfully inserted ${insertedBlocks.length} code blocks`);
+
+        // Close the connection
+        await mongoose.connection.close();
+        console.log("Database initialization completed");
+        process.exit(0);
+    } catch (error) {
+        console.error("Error initializing database:", error);
+        process.exit(1);
+    }
+});

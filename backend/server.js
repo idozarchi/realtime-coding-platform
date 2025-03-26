@@ -6,6 +6,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require("path");
 const codeBlockRoutes = require('./routes/codeBlocks');
+const connectDB = require('./config/database');
 
 const app = express();
 const server = http.createServer(app);
@@ -18,63 +19,37 @@ const allowedOrigins = [
   "https://realtime-coding-platform-git-main-idos-projects-e7dca031.vercel.app"
 ].filter(Boolean); // Remove any undefined values
 
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true
-  }
-});
-
-// CORS configuration
+// Configure CORS
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
 
+// Middleware
 app.use(express.json());
+
+// Routes
 app.use('/api/codeblocks', codeBlockRoutes);
 
-// Serve React frontend in production
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/build")));
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-  });
-}
+// Serve static files from the frontend build directory
+app.use(express.static(path.join(__dirname, '../frontend/build')));
 
-app.get("/", (req, res) => {
-  res.send("Real-time Coding Platform Backend is Running");
+// Serve index.html for all other routes
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-  family: 4
-})
-.then(() => {
-  console.log("Connected to MongoDB successfully");
-  const PORT = process.env.PORT || 5000;
-  server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
-})
-.catch((err) => {
-  console.error("MongoDB connection error:", err);
-  process.exit(1);
+connectDB();
+
+// Socket.IO setup
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
+  }
 });
 
 // Socket.IO connection handling
