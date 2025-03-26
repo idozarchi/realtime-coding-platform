@@ -5,7 +5,6 @@ import CreateBlockForm from '../../components/CreateBlockForm/CreateBlockForm';
 import Button from '../../ui/Button';
 import CodeBlockCard from '../../components/CodeBlockCard/CodeBlockCard';
 import './Lobby.css';
-import CodeBlockList from '../../components/Lobby/CodeBlockList';
 
 const Lobby = () => {
   const navigate = useNavigate();
@@ -69,25 +68,12 @@ const Lobby = () => {
     setCreateError(null);
   };
 
-  const handleCreateBlock = async (newBlock) => {
-    try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/codeblocks`, newBlock);
-      setCodeBlocks([...codeBlocks, response.data]);
-    } catch (error) {
-      console.error('Error creating code block:', error);
-    }
-  };
-
-  const handleJoinBlock = (id) => {
-    navigate(`/codeblock/${id}`);
-  };
-
   if (loading) return <div className="lobby-container">Loading...</div>;
   if (error) return <div className="lobby-container">Error: {error}</div>;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Code Blocks</h1>
+    <div className="lobby-container">
+      <h1 className="lobby-title">Choose a Code Block</h1>
       <div className="lobby-actions">
         <Button onClick={() => setShowCreateForm(true)}>Create New Block</Button>
       </div>
@@ -101,7 +87,15 @@ const Lobby = () => {
           loading={creating}
         />
       )}
-      <CodeBlockList codeBlocks={codeBlocks} onJoinBlock={handleJoinBlock} />
+      <ul className="code-block-list">
+        {codeBlocks.map((block) => (
+          <CodeBlockCard
+            key={block.id}
+            block={block}
+            onClick={handleSelectBlock}
+          />
+        ))}
+      </ul>
     </div>
   );
 };
