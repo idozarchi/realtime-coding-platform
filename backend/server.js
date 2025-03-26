@@ -32,13 +32,21 @@ app.use(express.json());
 // Routes
 app.use('/api/codeblocks', codeBlockRoutes);
 
-// Serve static files from the frontend build directory
-app.use(express.static(path.join(__dirname, '../frontend/build')));
-
-// Serve index.html for all other routes
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
-});
+// Serve static files from the frontend build directory if it exists
+const buildPath = path.join(__dirname, '../frontend/build');
+if (process.env.NODE_ENV === 'production' && require('fs').existsSync(buildPath)) {
+    app.use(express.static(buildPath));
+    
+    // Serve index.html for all other routes
+    app.get("*", (req, res) => {
+        res.sendFile(path.join(buildPath, 'index.html'));
+    });
+} else {
+    // In development or if build directory doesn't exist, just serve a simple response
+    app.get("*", (req, res) => {
+        res.send("Real-time Coding Platform Backend is Running");
+    });
+}
 
 // Connect to MongoDB
 connectDB().then(() => {
