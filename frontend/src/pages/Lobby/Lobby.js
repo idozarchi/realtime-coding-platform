@@ -30,8 +30,8 @@ const Lobby = () => {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks`);
         setCodeBlocks(response.data);
       } catch (error) {
+        setError('Failed to fetch code blocks');
         console.error('Error fetching code blocks:', error);
-        setError(error.message);
       } finally {
         setLoading(false);
       }
@@ -40,8 +40,8 @@ const Lobby = () => {
     fetchCodeBlocks();
   }, []);
 
-  const handleSelectBlock = (id) => {
-    navigate(`/code-block/${id}`);
+  const handleSelectBlock = (block) => {
+    navigate(`/codeblock/${block.id}`);
   };
 
   const handleCreateSubmit = async (e) => {

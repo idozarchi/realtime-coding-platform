@@ -55,10 +55,10 @@ const CodeBlock = () => {
         (count) => setStudentCount(count)
     );
 
-    // Fetch code block data
     useEffect(() => {
         const fetchCodeBlock = async () => {
             try {
+                setLoading(true);
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`);
                 setCodeBlock(response.data);
                 if (!hasReceivedRoomState.current) {
@@ -68,6 +68,8 @@ const CodeBlock = () => {
             } catch (error) {
                 console.error('Error fetching code block:', error);
                 navigate('/');
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -84,13 +86,13 @@ const CodeBlock = () => {
         if (socketRef.current) {
             socketRef.current.emit('code-update', { roomId: id, code: value });
         }
-        
+
         try {
-            await axios.put(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}/current-code`, {
-                currentCode: value
+            await axios.post(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}/save`, {
+                code: value
             });
         } catch (error) {
-            console.error('Error saving current code:', error);
+            console.error('Error saving code:', error);
         }
         
         if (!showSolution && role !== 'mentor' && codeBlock && value === codeBlock.solution) {
