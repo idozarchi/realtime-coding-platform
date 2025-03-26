@@ -40,7 +40,7 @@ function Lobby() {
   };
 
   const handleSelectBlock = (id) => {
-    navigate(`/api/codeblocks/${id}`);
+    navigate(`/code-block/${id}`);
   };
 
   const handleCreateSubmit = async (e) => {
