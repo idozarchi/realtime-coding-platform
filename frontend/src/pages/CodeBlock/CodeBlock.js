@@ -47,9 +47,7 @@ const CodeBlock = () => {
             // Handle role assignment
             socket.on('role-assigned', (data) => {
                 console.log('Role assigned:', data.role);
-                if (!role) { // Only set role if it hasn't been set yet
-                    setRole(data.role);
-                }
+                setRole(data.role);
             });
 
             // Handle code updates from other students
@@ -66,7 +64,7 @@ const CodeBlock = () => {
             socket.on('room-state', (data) => {
                 console.log('Received room state:', data);
                 setStudentCount(data.studentCount || 0);
-                if (data.currentCode && !hasReceivedRoomState.current) {
+                if (data.currentCode) {
                     setStudentCode(data.currentCode);
                     setCode(data.currentCode);
                     hasReceivedRoomState.current = true;
@@ -97,7 +95,7 @@ const CodeBlock = () => {
                 socketRef.current.disconnect();
             }
         };
-    }, [id, navigate]); // Removed role from dependencies
+    }, [id, navigate, role, showSolution]); // Added role and showSolution to dependencies
 
     // Fetch code block data
     useEffect(() => {
@@ -168,11 +166,12 @@ const CodeBlock = () => {
     };
 
     const handleReset = () => {
-        setCode(codeBlock.initialCode);
-        setStudentCode(codeBlock.initialCode);
+        const initialCode = codeBlock.initialCode;
+        setCode(initialCode);
+        setStudentCode(initialCode);
         setShowSuccess(false);
         if (socketRef.current) {
-            socketRef.current.emit('code-update', { roomId: id, code: codeBlock.initialCode });
+            socketRef.current.emit('code-update', { roomId: id, code: initialCode });
         }
     };
 
