@@ -7,24 +7,13 @@ const mongoose = require("mongoose");
 const path = require("path");
 const codeBlockRoutes = require('./routes/codeBlocks');
 const connectDB = require('./config/database');
+const { corsOptions, socketCorsOptions } = require('./config/cors');
 
 const app = express();
 const server = http.createServer(app);
 
-// Define allowed origins
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  "http://localhost:3000",
-  "https://realtime-coding-platform-xi.vercel.app",
-  "https://realtime-coding-platform-git-main-idos-projects-e7dca031.vercel.app"
-].filter(Boolean); // Remove any undefined values
-
 // Configure CORS
-app.use(cors({
-  origin: allowedOrigins,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
+app.use(cors(corsOptions));
 
 // Middleware
 app.use(express.json());
@@ -57,13 +46,7 @@ connectDB().then(() => {
 });
 
 // Socket.IO setup
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST"],
-    credentials: true
-  }
-});
+const io = new Server(server, socketCorsOptions);
 
 // Socket.IO connection handling
 const rooms = new Map();
