@@ -17,12 +17,13 @@ const useSocketConnection = (
 
         socket.on('connect', () => {
             console.log('Connected to socket server');
-            // Join room and handle role assignment in one place
-            socket.emit('join-room', roomId, (response) => {
-                console.log('Joined room, role:', response.role);
-                // Role is assigned by server when joining room
-                socket.role = response.role;
-            });
+            socket.emit('join-room', roomId);
+        });
+
+        // Handle role assignment
+        socket.on('role-assigned', (data) => {
+            console.log('Role assigned:', data.role);
+            socket.role = data.role;
         });
 
         socket.on('code-update', onCodeUpdate);
