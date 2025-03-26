@@ -21,6 +21,13 @@ const CodeBlock = () => {
     const [loading, setLoading] = useState(false);
     const hasReceivedRoomState = useRef(false);
 
+    // Update title when codeBlock changes
+    useEffect(() => {
+        if (codeBlock) {
+            document.title = `RTCP - ${codeBlock.name}`;
+        }
+    }, [codeBlock]);
+
     const socketRef = useSocketConnection(
         id,
         (role) => setRole(role),

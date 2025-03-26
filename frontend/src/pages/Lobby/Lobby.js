@@ -21,6 +21,7 @@ function Lobby() {
 
   useEffect(() => {
     fetchCodeBlocks();
+    document.title = 'RTCP Lobby';
   }, []);
 
   const fetchCodeBlocks = async () => {
