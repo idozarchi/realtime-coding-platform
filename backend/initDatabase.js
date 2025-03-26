@@ -2,6 +2,7 @@ require('dotenv').config();
 const mongoose = require("mongoose");
 const CodeBlock = require("./models/CodeBlock");
 const connectDB = require('./config/database');
+const axios = require('axios');
 
 // Connect to MongoDB and initialize database
 connectDB().then(async () => {
@@ -19,9 +20,8 @@ function fetchData() {
 }`,
         solution: `async function fetchData() {
   try {
-    const response = await fetch('https://api.example.com/data');
-    const data = await response.json();
-    return data;
+    const response = await axios.get('https://api.example.com/data');
+    return response.data;
   } catch (error) {
     throw new Error('Failed to fetch data: ' + error.message);
   }
