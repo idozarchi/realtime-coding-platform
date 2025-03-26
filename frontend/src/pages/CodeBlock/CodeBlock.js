@@ -22,56 +22,74 @@ const CodeBlock = () => {
 
     // Initialize socket connection and handle role assignment
     useEffect(() => {
-        const socket = io(process.env.REACT_APP_API_URL);
-        socketRef.current = socket;
+        const connectSocket = () => {
+            const socket = io(process.env.REACT_APP_API_URL, {
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000,
+                timeout: 10000
+            });
+            socketRef.current = socket;
 
-        // Join room first
-        socket.emit('join-room', id);
+            socket.on('connect_error', (error) => {
+                console.error('Socket connection error:', error);
+            });
 
-        // Handle role assignment
-        socket.on('role-assigned', (data) => {
-            console.log('Role assigned:', data.role);
-            setRole(data.role);
-        });
+            socket.on('connect', () => {
+                console.log('Socket connected successfully');
+                socket.emit('join-room', id);
+            });
 
-        // Handle code updates from other students
-        socket.on('code-update', (data) => {
-            console.log('Received code update:', data);
-            if (role === 'student') {
-                setStudentCode(data.code);
-            } else if (role === 'mentor' && !showSolution) {
-                setCode(data.code);
-            }
-        });
+            // Join room first
+            socket.emit('join-room', id);
 
-        // Handle room state updates
-        socket.on('room-state', (data) => {
-            console.log('Received room state:', data);
-            setStudentCount(data.studentCount || 0);
-            if (data.currentCode) {
-                setStudentCode(data.currentCode);
-                hasReceivedRoomState.current = true;
-            }
-        });
+            // Handle role assignment
+            socket.on('role-assigned', (data) => {
+                console.log('Role assigned:', data.role);
+                setRole(data.role);
+            });
 
-        // Handle solution success
-        socket.on('solution-success', () => {
-            setShowSuccess(true);
-        });
+            // Handle code updates from other students
+            socket.on('code-update', (data) => {
+                console.log('Received code update:', data);
+                if (role === 'student') {
+                    setStudentCode(data.code);
+                } else if (role === 'mentor' && !showSolution) {
+                    setCode(data.code);
+                }
+            });
 
-        // Handle mentor leaving
-        socket.on('mentor-left', () => {
-            alert('Mentor has left the room. You will be redirected to the lobby.');
-            navigate('/');
-        });
+            // Handle room state updates
+            socket.on('room-state', (data) => {
+                console.log('Received room state:', data);
+                setStudentCount(data.studentCount || 0);
+                if (data.currentCode) {
+                    setStudentCode(data.currentCode);
+                    hasReceivedRoomState.current = true;
+                }
+            });
 
-        // Handle student count updates
-        socket.on('student-count', (count) => {
-            setStudentCount(count);
-        });
+            // Handle solution success
+            socket.on('solution-success', () => {
+                setShowSuccess(true);
+            });
+
+            // Handle mentor leaving
+            socket.on('mentor-left', () => {
+                alert('Mentor has left the room. You will be redirected to the lobby.');
+                navigate('/');
+            });
+
+            // Handle student count updates
+            socket.on('student-count', (count) => {
+                setStudentCount(count);
+            });
+        };
+
+        connectSocket();
 
         return () => {
-            socket.disconnect();
+            socketRef.current.disconnect();
         };
     }, [id, navigate, role]);
 
@@ -79,6 +97,7 @@ const CodeBlock = () => {
     useEffect(() => {
         const fetchCodeBlock = async () => {
             try {
+                setLoading(true);
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`);
                 setCodeBlock(response.data);
                 if (!hasReceivedRoomState.current) {
@@ -87,7 +106,14 @@ const CodeBlock = () => {
                 }
             } catch (error) {
                 console.error('Error fetching code block:', error);
+                if (error.response?.status === 404) {
+                    alert('Code block not found. Redirecting to lobby...');
+                } else {
+                    alert('Error loading code block. Please try again later.');
+                }
                 navigate('/');
+            } finally {
+                setLoading(false);
             }
         };
 
