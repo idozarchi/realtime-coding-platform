@@ -53,11 +53,9 @@ const CodeBlock = () => {
             // Handle code updates from other students
             socket.on('code-update', (data) => {
                 console.log('Received code update:', data);
-                // Always update the code state based on current role
-                const currentRole = role;
-                if (currentRole === 'student') {
+                if (role === 'student') {
                     setStudentCode(data.code);
-                } else if (currentRole === 'mentor' && !showSolution) {
+                } else if (role === 'mentor' && !showSolution) {
                     setCode(data.code);
                 }
             });
@@ -98,7 +96,7 @@ const CodeBlock = () => {
                 socketRef.current.disconnect();
             }
         };
-    }, [id, navigate, role, showSolution]); // Added role and showSolution to dependencies
+    }, [id, navigate]); // Removed role and showSolution from dependencies
 
     // Fetch code block data
     useEffect(() => {
