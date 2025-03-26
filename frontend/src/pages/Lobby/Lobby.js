@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CreateBlockForm from '../../components/CreateBlockForm';
 import Button from '../../ui/Button';
+import CodeBlockCard from '../../components/CodeBlockCard/CodeBlockCard';
 import './Lobby.css';
 
 function Lobby() {
@@ -99,9 +100,11 @@ function Lobby() {
       )}
       <ul className="code-block-list">
         {codeBlocks.map((block) => (
-          <li key={block._id} className="code-block-item" onClick={() => handleSelectBlock(block._id)}>
-            {block.name}
-          </li>
+          <CodeBlockCard
+            key={block.id}
+            block={block}
+            onClick={handleSelectBlock}
+          />
         ))}
       </ul>
     </div>
