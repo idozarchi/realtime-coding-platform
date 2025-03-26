@@ -1,0 +1,9 @@
+.editor-container {
+    width: 100%;
+    margin: 20px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Editor-specific styles can be added here if needed */ 

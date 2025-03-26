@@ -1,0 +1,7 @@
+.student-controls {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    justify-content: center;
+    padding: 10px;
+} 
