@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import CreateBlockForm from '../../components/CreateBlockForm';
+import axios from 'axios';
+import CreateBlockForm from '../../components/CreateBlockForm/CreateBlockForm';
 import Button from '../../ui/Button';
 import CodeBlockCard from '../../components/CodeBlockCard/CodeBlockCard';
 import './Lobby.css';
 
-function Lobby() {
+const Lobby = () => {
   const navigate = useNavigate();
   const [codeBlocks, setCodeBlocks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,25 +21,24 @@ function Lobby() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    fetchCodeBlocks();
     document.title = 'RTCP Lobby';
   }, []);
 
-  const fetchCodeBlocks = async () => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/codeblocks`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch code blocks');
+  useEffect(() => {
+    const fetchCodeBlocks = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks`);
+        setCodeBlocks(response.data);
+      } catch (error) {
+        console.error('Error fetching code blocks:', error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
-      const data = await response.json();
-      setCodeBlocks(data);
-    } catch (err) {
-      console.error('Error fetching code blocks:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchCodeBlocks();
+  }, []);
 
   const handleSelectBlock = (id) => {
     navigate(`/code-block/${id}`);
@@ -50,20 +50,8 @@ function Lobby() {
     setCreateError(null);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/codeblocks`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newBlock),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create code block');
-      }
-
-      const createdBlock = await response.json();
-      setCodeBlocks([...codeBlocks, createdBlock]);
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/codeblocks`, newBlock);
+      setCodeBlocks([...codeBlocks, response.data]);
       setShowCreateForm(false);
       setNewBlock({ name: '', initialCode: '', solution: '' });
     } catch (err) {
@@ -110,6 +98,6 @@ function Lobby() {
       </ul>
     </div>
   );
-}
+};
 
 export default Lobby; 
