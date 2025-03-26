@@ -16,7 +16,7 @@ const corsOptions = {
 // CORS configuration for Socket.IO
 const socketCorsOptions = {
     cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:3000",
+        origin: allowedOrigins,
         methods: ["GET", "POST"],
         credentials: true
     }
