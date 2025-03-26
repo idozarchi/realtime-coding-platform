@@ -29,14 +29,13 @@ app.use(express.json());
 // Routes
 app.use('/api/codeblocks', codeBlockRoutes);
 
-// Room management
+// Socket.IO connection handling
 const rooms = new Map();
 
 // Clear rooms when server starts
 rooms.clear();
 console.log('Rooms cleared on server start');
 
-// Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
