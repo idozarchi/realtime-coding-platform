@@ -1,19 +1,32 @@
 .code-block-item {
-    background-color: #ffffff;
-    border: 1px solid #ddd;
+    background-color: #2d2d2d;
+    border: 1px solid #333;
     border-radius: 8px;
     padding: 1.5rem;
     cursor: pointer;
     transition: all 0.3s ease;
-    color: #333;
+    color: #fff;
     text-align: center;
     font-size: 1.2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .code-block-item:hover {
     transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    border-color: #999;
-    background-color: #f8f8f8;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    border-color: #666;
+    background-color: #333;
+}
+
+.code-block-item h2 {
+    margin: 0 0 1rem 0;
+    color: #fff;
+}
+
+.code-block-item p {
+    margin: 0 0 1rem 0;
+    color: #888;
+}
+
+.code-block-item div {
+    color: #666;
 }

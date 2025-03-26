@@ -7,7 +7,7 @@ const CodeBlockCard = ({ block, onClick }) => {
             className="code-block-item"
             onClick={() => onClick(block.id)}
         >
-            <h2>{block.title}</h2>
+            <h2>{block.name}</h2>
             <p>{block.description}</p>
             <div>
                 <span>{block.language}</span>
