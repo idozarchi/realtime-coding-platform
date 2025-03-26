@@ -19,6 +19,7 @@ const CodeBlock = () => {
     const [loading, setLoading] = useState(false);
     const socketRef = useRef(null);
     const hasReceivedRoomState = useRef(false);
+    const hasJoinedRoom = useRef(false);
 
     // Initialize socket connection and handle role assignment
     useEffect(() => {
@@ -37,16 +38,18 @@ const CodeBlock = () => {
 
             socket.on('connect', () => {
                 console.log('Socket connected successfully');
-                socket.emit('join-room', id);
+                if (!hasJoinedRoom.current) {
+                    socket.emit('join-room', id);
+                    hasJoinedRoom.current = true;
+                }
             });
-
-            // Join room first
-            socket.emit('join-room', id);
 
             // Handle role assignment
             socket.on('role-assigned', (data) => {
                 console.log('Role assigned:', data.role);
-                setRole(data.role);
+                if (!role) { // Only set role if it hasn't been set yet
+                    setRole(data.role);
+                }
             });
 
             // Handle code updates from other students
@@ -63,8 +66,9 @@ const CodeBlock = () => {
             socket.on('room-state', (data) => {
                 console.log('Received room state:', data);
                 setStudentCount(data.studentCount || 0);
-                if (data.currentCode) {
+                if (data.currentCode && !hasReceivedRoomState.current) {
                     setStudentCode(data.currentCode);
+                    setCode(data.currentCode);
                     hasReceivedRoomState.current = true;
                 }
             });
@@ -89,9 +93,11 @@ const CodeBlock = () => {
         connectSocket();
 
         return () => {
-            socketRef.current.disconnect();
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
         };
-    }, [id, navigate, role]);
+    }, [id, navigate]); // Removed role from dependencies
 
     // Fetch code block data
     useEffect(() => {
@@ -157,7 +163,7 @@ const CodeBlock = () => {
             setCode(codeBlock.solution);
         } else {
             // When hiding solution, set code to the current code in the room
-            setCode(codeBlock.currentCode || codeBlock.initialCode);
+            setCode(studentCode);
         }
     };
 
@@ -165,10 +171,13 @@ const CodeBlock = () => {
         setCode(codeBlock.initialCode);
         setStudentCode(codeBlock.initialCode);
         setShowSuccess(false);
+        if (socketRef.current) {
+            socketRef.current.emit('code-update', { roomId: id, code: codeBlock.initialCode });
+        }
     };
 
     const handleSubmit = () => {
-        if (code === codeBlock.solution) {
+        if (studentCode === codeBlock.solution) {
             setShowSuccess(true);
             if (socketRef.current) {
                 socketRef.current.emit('solution-success', { roomId: id });
