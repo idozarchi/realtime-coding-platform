@@ -8,33 +8,17 @@ const path = require("path");
 const codeBlockRoutes = require('./routes/codeBlocks');
 const connectDB = require('./config/database');
 const { corsOptions, socketCorsOptions } = require('./config/cors');
+const setupStaticFiles = require('./config/staticConfig');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: [
-            process.env.FRONTEND_URL || "http://localhost:3000",
-            "https://realtime-coding-platform-xi.vercel.app",
-            "https://realtime-coding-platform-git-main-idos-projects-e7dca031.vercel.app"
-        ],
-        methods: ["GET", "POST"],
-        credentials: true
-    }
-});
+const io = socketIo(server, socketCorsOptions);
 
 // Connect to MongoDB
 connectDB();
 
 // Middleware
-app.use(cors({
-    origin: [
-        process.env.FRONTEND_URL || "http://localhost:3000",
-        "https://realtime-coding-platform-xi.vercel.app",
-        "https://realtime-coding-platform-git-main-idos-projects-e7dca031.vercel.app"
-    ],
-    credentials: true
-}));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
@@ -132,13 +116,8 @@ io.on('connection', (socket) => {
     });
 });
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../frontend/build')));
-    app.get('*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, '../frontend/build', 'index.html'));
-    });
-}
+// Setup static files
+setupStaticFiles(app);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
