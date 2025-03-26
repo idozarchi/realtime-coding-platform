@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from '../../ui/Button';
 import './CodeBlockHeader.css';
 
@@ -9,6 +10,8 @@ const CodeBlockHeader = ({
     onShowSolution, 
     showSolution 
 }) => {
+    const navigate = useNavigate();
+
     return (
         <div className="code-block-header">
             <h1>{title}</h1>
@@ -18,14 +21,22 @@ const CodeBlockHeader = ({
             <div className="student-count">
                 Students in room: {studentCount}
             </div>
-            {role === 'mentor' && (
+            <div className="header-actions">
+                {role === 'mentor' && (
+                    <Button
+                        variant="solution"
+                        onClick={onShowSolution}
+                    >
+                        {showSolution ? 'Hide Solution' : 'Show Solution'}
+                    </Button>
+                )}
                 <Button
-                    variant="solution"
-                    onClick={onShowSolution}
+                    variant="secondary"
+                    onClick={() => navigate('/')}
                 >
-                    {showSolution ? 'Hide Solution' : 'Show Solution'}
+                    Back to Lobby
                 </Button>
-            )}
+            </div>
         </div>
     );
 };
