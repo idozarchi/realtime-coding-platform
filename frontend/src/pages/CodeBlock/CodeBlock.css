@@ -5,6 +5,7 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: #1e1e1e;
 }
 
 .code-block-header {
@@ -31,6 +32,7 @@
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 1rem;
+  background-color: #2d2d2d;
 }
 
 .code-block-controls {
@@ -42,7 +44,7 @@
 
 .solution-button,
 .check-solution-button {
-  background-color: #1e1e1e;
+  background-color: #2d2d2d;
   color: #fff;
   border: 1px solid #333;
   padding: 0.5rem 1rem;
