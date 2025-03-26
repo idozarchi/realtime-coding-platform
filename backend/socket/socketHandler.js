@@ -36,7 +36,6 @@ const setupSocketHandlers = (io) => {
                     studentCount: existingRoom.students.size
                 });
                 
-                // Update student count for all users
                 io.to(roomId).emit('student-count', existingRoom.students.size);
             }
         });
