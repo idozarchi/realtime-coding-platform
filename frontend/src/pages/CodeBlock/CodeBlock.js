@@ -47,15 +47,17 @@ const CodeBlock = () => {
             // Handle role assignment
             socket.on('role-assigned', (data) => {
                 console.log('Role assigned:', data.role);
-                setRole(data.role); // Always accept the role from the backend
+                setRole(data.role);
             });
 
             // Handle code updates from other students
             socket.on('code-update', (data) => {
                 console.log('Received code update:', data);
-                if (role === 'student') {
+                // Always update the code state based on current role
+                const currentRole = role;
+                if (currentRole === 'student') {
                     setStudentCode(data.code);
-                } else if (role === 'mentor' && !showSolution) {
+                } else if (currentRole === 'mentor' && !showSolution) {
                     setCode(data.code);
                 }
             });
@@ -65,6 +67,7 @@ const CodeBlock = () => {
                 console.log('Received room state:', data);
                 setStudentCount(data.studentCount || 0);
                 if (data.currentCode) {
+                    // Update both states to ensure consistency
                     setStudentCode(data.currentCode);
                     setCode(data.currentCode);
                     hasReceivedRoomState.current = true;
@@ -95,7 +98,7 @@ const CodeBlock = () => {
                 socketRef.current.disconnect();
             }
         };
-    }, [id, navigate]); // Removed role and showSolution from dependencies
+    }, [id, navigate, role, showSolution]); // Added role and showSolution to dependencies
 
     // Fetch code block data
     useEffect(() => {
@@ -104,6 +107,7 @@ const CodeBlock = () => {
                 setLoading(true);
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`);
                 setCodeBlock(response.data);
+                
                 // Only set initial code if we haven't received room state yet
                 if (!hasReceivedRoomState.current) {
                     setCode(response.data.initialCode);
@@ -130,7 +134,7 @@ const CodeBlock = () => {
             return;
         }
 
-        // Update local state
+        // Update local state first
         setStudentCode(value);
         
         // Emit code update to other users
