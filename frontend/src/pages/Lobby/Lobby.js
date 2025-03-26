@@ -40,8 +40,8 @@ const Lobby = () => {
     fetchCodeBlocks();
   }, []);
 
-  const handleSelectBlock = (block) => {
-    navigate(`/codeblock/${block.id}`);
+  const handleSelectBlock = (blockId) => {
+    navigate(`/codeblock/${blockId}`);
   };
 
   const handleCreateSubmit = async (e) => {
