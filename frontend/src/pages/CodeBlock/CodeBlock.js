@@ -32,6 +32,7 @@ const CodeBlock = () => {
         (data) => {
             console.log('Role assigned:', data.role);
             setRole(data.role);
+            currentRole.current = data.role;
         },
         (data) => {
             console.log('Received code update:', data);
