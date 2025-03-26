@@ -15,10 +15,14 @@ const useSocketConnection = (
         const socket = io(process.env.REACT_APP_API_URL);
         socketRef.current = socket;
 
-        // Wait for connection before joining room
         socket.on('connect', () => {
             console.log('Connected to socket server');
-            socket.emit('join-room', roomId);
+            // Join room and handle role assignment in one place
+            socket.emit('join-room', roomId, (response) => {
+                console.log('Joined room, role:', response.role);
+                // Role is assigned by server when joining room
+                socket.role = response.role;
+            });
         });
 
         socket.on('code-update', onCodeUpdate);

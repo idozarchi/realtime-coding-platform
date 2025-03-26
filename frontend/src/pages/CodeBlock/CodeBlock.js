@@ -14,26 +14,18 @@ const CodeBlock = () => {
     const [codeBlock, setCodeBlock] = useState(null);
     const [code, setCode] = useState('');
     const [studentCode, setStudentCode] = useState('');
-    const [role, setRole] = useState(null);
     const [studentCount, setStudentCount] = useState(0);
     const [showSuccess, setShowSuccess] = useState(false);
     const [showSolution, setShowSolution] = useState(false);
     const [loading, setLoading] = useState(false);
     const hasReceivedRoomState = useRef(false);
-    const roleRef = useRef(null);
-
-    // Update roleRef whenever role state changes
-    useEffect(() => {
-        roleRef.current = role;
-    }, [role]);
-
     const socketRef = useSocketConnection(
         id,
         (data) => {
             console.log('Received code update:', data);
-            if (roleRef.current === 'student') {
+            if (socketRef.current?.role === 'student') {
                 setStudentCode(data.code);
-            } else if (roleRef.current === 'mentor' && !showSolution) {
+            } else if (socketRef.current?.role === 'mentor' && !showSolution) {
                 setCode(data.code);
             }
         },
@@ -52,24 +44,6 @@ const CodeBlock = () => {
         },
         (count) => setStudentCount(count)
     );
-
-    // Handle socket events directly
-    useEffect(() => {
-        const socket = socketRef.current;
-        if (!socket) return;
-
-        const handleRoleAssigned = (data) => {
-            console.log('Role assigned:', data.role);
-            setRole(data.role);
-            roleRef.current = data.role;
-        };
-
-        socket.on('role-assigned', handleRoleAssigned);
-
-        return () => {
-            socket.off('role-assigned', handleRoleAssigned);
-        };
-    }, [socketRef]);
 
     // Fetch code block data
     useEffect(() => {
@@ -91,7 +65,7 @@ const CodeBlock = () => {
     }, [id, navigate]);
 
     const handleCodeChange = async (value) => {
-        if (roleRef.current === 'mentor') {
+        if (socketRef.current?.role === 'mentor') {
             return;
         }
 
@@ -109,7 +83,7 @@ const CodeBlock = () => {
             console.error('Error saving current code:', error);
         }
         
-        if (!showSolution && roleRef.current !== 'mentor' && codeBlock && value === codeBlock.solution) {
+        if (!showSolution && socketRef.current?.role !== 'mentor' && codeBlock && value === codeBlock.solution) {
             setShowSuccess(true);
             if (socketRef.current) {
                 socketRef.current.emit('solution-success', { roomId: id });
@@ -155,7 +129,7 @@ const CodeBlock = () => {
         <div className="code-block-container">
             <CodeBlockHeader 
                 title={codeBlock.name}
-                role={role}
+                role={socketRef.current?.role}
                 studentCount={studentCount}
                 onShowSolution={handleShowSolution}
                 showSolution={showSolution}
@@ -163,13 +137,13 @@ const CodeBlock = () => {
 
             <div className="editor-container">
                 <CodeEditor
-                    value={showSolution ? codeBlock.solution : (role === 'student' ? studentCode : code)}
+                    value={showSolution ? codeBlock.solution : (socketRef.current?.role === 'student' ? studentCode : code)}
                     onChange={handleCodeChange}
-                    readOnly={role === 'mentor'}
+                    readOnly={socketRef.current?.role === 'mentor'}
                 />
             </div>
 
-            {role === 'student' && (
+            {socketRef.current?.role === 'student' && (
                 <StudentControls
                     onReset={handleReset}
                     onSubmit={handleSubmit}
@@ -177,7 +151,7 @@ const CodeBlock = () => {
                 />
             )}
 
-            {showSuccess && role !== 'mentor' && (
+            {showSuccess && socketRef.current?.role !== 'mentor' && (
                 <SuccessOverlay onBackToLobby={() => navigate('/')} />
             )}
         </div>
