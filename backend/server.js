@@ -6,7 +6,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require("path");
 const codeBlockRoutes = require('./routes/codeBlocks');
-const { connectDB } = require('./config/database');
+const connectDB = require('./config/database');
 const { corsOptions, socketCorsOptions } = require('./config/cors');
 
 const app = express();
