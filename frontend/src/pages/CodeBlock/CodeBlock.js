@@ -31,11 +31,13 @@ const CodeBlock = () => {
         id,
         (data) => {
             console.log('Role assigned:', data.role);
+            // Set role immediately when received
             setRole(data.role);
             currentRole.current = data.role;
         },
         (data) => {
             console.log('Received code update:', data);
+            // Only update code based on current role
             if (currentRole.current === 'student') {
                 setStudentCode(data.code);
             } else if (currentRole.current === 'mentor' && !showSolution) {
@@ -66,6 +68,7 @@ const CodeBlock = () => {
                 setLoading(true);
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`);
                 setCodeBlock(response.data);
+                // Only set initial code if we haven't received room state yet
                 if (!hasReceivedRoomState.current) {
                     setCode(response.data.initialCode);
                     setStudentCode(response.data.initialCode);
@@ -87,7 +90,7 @@ const CodeBlock = () => {
     }, [id, navigate]);
 
     const handleCodeChange = async (value) => {
-        if (role === 'mentor') {
+        if (currentRole.current === 'mentor') {
             return;
         }
 
@@ -105,7 +108,7 @@ const CodeBlock = () => {
             console.error('Error saving current code:', error);
         }
         
-        if (!showSolution && role !== 'mentor' && codeBlock && value === codeBlock.solution) {
+        if (!showSolution && currentRole.current !== 'mentor' && codeBlock && value === codeBlock.solution) {
             setShowSuccess(true);
             if (socketRef.current) {
                 socketRef.current.emit('solution-success', { roomId: id });
@@ -147,7 +150,7 @@ const CodeBlock = () => {
         <div className="code-block-container">
             <CodeBlockHeader 
                 title={codeBlock.name}
-                role={role}
+                role={currentRole.current}
                 studentCount={studentCount}
                 onShowSolution={handleShowSolution}
                 showSolution={showSolution}
@@ -155,13 +158,13 @@ const CodeBlock = () => {
 
             <div className="editor-container">
                 <CodeEditor
-                    value={showSolution ? codeBlock.solution : (role === 'student' ? studentCode : code)}
+                    value={showSolution ? codeBlock.solution : (currentRole.current === 'student' ? studentCode : code)}
                     onChange={handleCodeChange}
-                    readOnly={role === 'mentor'}
+                    readOnly={currentRole.current === 'mentor'}
                 />
             </div>
 
-            {role === 'student' && (
+            {currentRole.current === 'student' && (
                 <StudentControls
                     onReset={handleReset}
                     onSubmit={handleSubmit}
@@ -169,7 +172,7 @@ const CodeBlock = () => {
                 />
             )}
 
-            {showSuccess && role !== 'mentor' && (
+            {showSuccess && currentRole.current !== 'mentor' && (
                 <SuccessOverlay onBackToLobby={() => navigate('/')} />
             )}
         </div>
