@@ -90,7 +90,7 @@ const Lobby = () => {
       <ul className="code-block-list">
         {codeBlocks.map((block) => (
           <CodeBlockCard
-            key={block.id}
+            key={block._id}
             block={block}
             onClick={handleSelectBlock}
           />
