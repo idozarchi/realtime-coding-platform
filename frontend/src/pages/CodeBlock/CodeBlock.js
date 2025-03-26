@@ -104,6 +104,7 @@ const CodeBlock = () => {
                 setLoading(true);
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`);
                 setCodeBlock(response.data);
+                // Only set initial code if we haven't received room state yet
                 if (!hasReceivedRoomState.current) {
                     setCode(response.data.initialCode);
                     setStudentCode(response.data.initialCode);
