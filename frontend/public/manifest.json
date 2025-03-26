@@ -10,7 +10,7 @@
     {
       "src": "logo.svg",
       "type": "image/svg+xml",
-      "sizes": "32x32"
+      "sizes": "any"
     }
   ],
   "start_url": ".",
