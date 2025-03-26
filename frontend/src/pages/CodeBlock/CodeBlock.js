@@ -20,18 +20,29 @@ const CodeBlock = () => {
     const [showSolution, setShowSolution] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const hasReceivedRoomState = useRef(false);
+    const currentRole = useRef(null);
+
+    // Update the ref whenever role state changes
+    useEffect(() => {
+        currentRole.current = role;
+    }, [role]);
 
     const socketRef = useSocketConnection(
         id,
-        (data) => setRole(data.role),
         (data) => {
-            if (role === 'student') {
+            console.log('Role assigned:', data.role);
+            setRole(data.role);
+        },
+        (data) => {
+            console.log('Received code update:', data);
+            if (currentRole.current === 'student') {
                 setStudentCode(data.code);
-            } else if (role === 'mentor' && !showSolution) {
+            } else if (currentRole.current === 'mentor' && !showSolution) {
                 setCode(data.code);
             }
         },
         (data) => {
+            console.log('Received room state:', data);
             setStudentCount(data.studentCount || 0);
             if (data.currentCode) {
                 setStudentCode(data.currentCode);
