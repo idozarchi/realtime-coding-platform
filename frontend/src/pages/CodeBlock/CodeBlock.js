@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import useSocketConnection from '../../hooks/useSocketConnection';
-import CodeBlockHeader from '../../components/CodeBlockHeader/CodeBlockHeader';
 import CodeEditor from '../../components/CodeEditor/CodeEditor';
+import CodeBlockHeader from '../../components/CodeBlockHeader/CodeBlockHeader';
 import StudentControls from '../../components/StudentControls/StudentControls';
 import SuccessOverlay from '../../components/SuccessOverlay/SuccessOverlay';
+import useSocketConnection from '../../hooks/useSocketConnection';
 import './CodeBlock.css';
 
 const CodeBlock = () => {
@@ -20,6 +20,7 @@ const CodeBlock = () => {
     const [showSolution, setShowSolution] = useState(false);
     const [loading, setLoading] = useState(false);
     const hasReceivedRoomState = useRef(false);
+    const currentRole = useRef(null);
 
     // Update title when codeBlock changes
     useEffect(() => {
@@ -30,142 +31,130 @@ const CodeBlock = () => {
 
     const socketRef = useSocketConnection(
         id,
-        (role) => setRole(role),
+        (newRole) => {
+            console.log('Role assigned:', newRole);
+            currentRole.current = newRole;
+            setRole(newRole);
+        },
         (data) => {
-            console.log('Received code update:', data);
-            if (role === 'student') {
-                setStudentCode(data.code);
-            } else if (role === 'mentor' && !showSolution) {
+            console.log('Code update received:', data);
+            if (currentRole.current === 'student') {
                 setCode(data.code);
             }
         },
         (data) => {
-            console.log('Received room state:', data);
-            setStudentCount(data.studentCount || 0);
+            console.log('Room state received:', data);
+            hasReceivedRoomState.current = true;
             if (data.currentCode) {
+                setCode(data.currentCode);
                 setStudentCode(data.currentCode);
-                hasReceivedRoomState.current = true;
             }
         },
-        () => setShowSuccess(true),
         () => {
-            alert('Mentor has left the room. You will be redirected to the lobby.');
+            console.log('Solution success!');
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 3000);
+        },
+        () => {
+            console.log('Mentor left, redirecting to lobby...');
             navigate('/');
         },
-        (count) => setStudentCount(count)
+        (count) => {
+            console.log('Student count updated:', count);
+            setStudentCount(count);
+        }
     );
 
+    // Fetch code block data
     useEffect(() => {
         const fetchCodeBlock = async () => {
             try {
                 setLoading(true);
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`);
                 setCodeBlock(response.data);
+                // Only set initial code if we haven't received room state yet
                 if (!hasReceivedRoomState.current) {
                     setCode(response.data.initialCode);
                     setStudentCode(response.data.initialCode);
                 }
             } catch (error) {
                 console.error('Error fetching code block:', error);
-                navigate('/');
             } finally {
                 setLoading(false);
             }
         };
 
         fetchCodeBlock();
-    }, [id, navigate]);
+    }, [id]);
 
-    const handleCodeChange = async (value) => {
-        if (role === 'mentor') {
-            return;
-        }
-
-        setStudentCode(value);
-        
-        if (socketRef.current) {
-            socketRef.current.emit('code-update', { roomId: id, code: value });
+    const handleCodeChange = async (newCode) => {
+        if (currentRole.current === 'student') {
+            setStudentCode(newCode);
+            socketRef.current.emit('code-update', { roomId: id, code: newCode });
+        } else {
+            setCode(newCode);
+            socketRef.current.emit('code-update', { roomId: id, code: newCode });
         }
 
         try {
             await axios.post(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}/save`, {
-                code: value
+                code: currentRole.current === 'student' ? studentCode : newCode
             });
         } catch (error) {
             console.error('Error saving code:', error);
         }
-        
-        if (!showSolution && role !== 'mentor' && codeBlock && value === codeBlock.solution) {
-            setShowSuccess(true);
-            if (socketRef.current) {
-                socketRef.current.emit('solution-success', { roomId: id });
-            }
-        }
     };
 
     const handleShowSolution = () => {
-        setShowSolution(!showSolution);
-        if (!showSolution) {
-            setCode(codeBlock.solution);
-        } else {
-            // When hiding solution, set code to the current code in the room
-            setCode(codeBlock.currentCode || codeBlock.initialCode);
-        }
-    };
-
-    const handleReset = () => {
-        setCode(codeBlock.initialCode);
-        setStudentCode(codeBlock.initialCode);
-        setShowSuccess(false);
-        if (socketRef.current) {
-            socketRef.current.emit('code-update', { roomId: id, code: codeBlock.initialCode });
+        if (currentRole.current === 'mentor') {
+            setShowSolution(!showSolution);
         }
     };
 
     const handleSubmit = () => {
-        if (studentCode === codeBlock.solution) {
-            setShowSuccess(true);
-            if (socketRef.current) {
-                socketRef.current.emit('solution-success', { roomId: id });
-            }
-        } else {
-            alert('Incorrect solution. Please try again!');
+        if (currentRole.current === 'student' && studentCode === codeBlock.solution) {
+            socketRef.current.emit('solution-success', { roomId: id });
         }
     };
 
+    const handleReset = () => {
+        if (currentRole.current === 'student') {
+            setStudentCode(codeBlock.initialCode);
+            socketRef.current.emit('code-update', { roomId: id, code: codeBlock.initialCode });
+        } else {
+            setCode(codeBlock.initialCode);
+            socketRef.current.emit('code-update', { roomId: id, code: codeBlock.initialCode });
+        }
+    };
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
     if (!codeBlock) {
-        return <div className="loading">Loading...</div>;
+        return <div>Code block not found</div>;
     }
 
     return (
-        <div className="code-block-container">
+        <div className="flex flex-col h-screen">
             <CodeBlockHeader
                 title={codeBlock.name}
                 role={role}
                 studentCount={studentCount}
                 onShowSolution={handleShowSolution}
                 showSolution={showSolution}
+                onSubmit={handleSubmit}
+                onReset={handleReset}
             />
-
-            <div className="editor-container">
+            <div className="flex-1 p-4">
                 <CodeEditor
-                    value={showSolution ? codeBlock.solution : (role === 'student' ? studentCode : code)}
+                    code={role === 'student' ? studentCode : code}
                     onChange={handleCodeChange}
-                    readOnly={role === 'mentor'}
+                    readOnly={role === 'student' && showSolution}
+                    solution={showSolution ? codeBlock.solution : null}
+                    showSuccess={showSuccess}
                 />
             </div>
-
-            {role === 'student' && (
-                <StudentControls
-                    onReset={handleReset}
-                    onSubmit={handleSubmit}
-                    loading={loading}
-                />
-            )}
-
-            {showSuccess && role !== 'mentor' && (
-                <SuccessOverlay onBackToLobby={() => navigate('/')} />
-            )}
         </div>
     );
 };
