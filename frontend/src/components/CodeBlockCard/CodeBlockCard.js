@@ -5,15 +5,10 @@ const CodeBlockCard = ({ block, onClick }) => {
     return (
         <li
             className="code-block-item"
-            onClick={() => onClick(block.id)}
+            onClick={() => onClick(block._id)}
         >
             <h2>{block.name}</h2>
-            <p>{block.description}</p>
-            <div>
-                <span>{block.language}</span>
-                <span> • </span>
-                <span>{block.difficulty}</span>
-            </div>
+            <p>Click to start coding</p>
         </li>
     );
 };
