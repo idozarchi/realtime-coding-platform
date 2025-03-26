@@ -41,7 +41,7 @@ const Lobby = () => {
   }, []);
 
   const handleSelectBlock = (blockId) => {
-    navigate(`/codeblock/${blockId}`);
+    navigate(`/code-block/${blockId}`);
   };
 
   const handleCreateSubmit = async (e) => {
