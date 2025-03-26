@@ -8,14 +8,14 @@ const allowedOrigins = [
 
 // CORS configuration for Express
 const corsOptions = {
-    origin: allowedOrigins,
+    origin: true, // Allow all origins
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
 };
 
 // CORS configuration for Socket.IO
 const socketCorsOptions = {
-    origin: allowedOrigins,
+    origin: true, // Allow all origins
     methods: ["GET", "POST"],
     credentials: true
 };
