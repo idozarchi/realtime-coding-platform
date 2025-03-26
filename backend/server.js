@@ -7,17 +7,12 @@ const mongoose = require("mongoose");
 const path = require("path");
 const codeBlockRoutes = require('./routes/codeBlocks');
 const connectDB = require('./config/database');
-const { corsOptions } = require('./config/cors');
+const { corsOptions, socketCorsOptions } = require('./config/cors');
 const setupStaticFiles = require('./config/staticConfig');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:3000",
-        methods: ["GET", "POST"]
-    }
-});
+const io = socketIo(server, socketCorsOptions);
 
 // Connect to MongoDB
 connectDB();
