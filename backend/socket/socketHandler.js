@@ -11,36 +11,47 @@ const setupSocketHandlers = (io) => {
 
         socket.on('join-room', ({ roomId }) => {
             console.log(`User ${socket.id} joining room ${roomId}`);
-            socket.join(roomId);
-
-            // Get current room state
-            const room = rooms.get(roomId);
-            if (room) {
-                // Room exists, user is a student
-                socket.emit('role-assigned', { role: 'student' });
-                // Send current room state to the new user
-                socket.emit('room-state', {
-                    currentCode: room.currentCode,
-                    studentCount: room.studentCount
-                });
-            } else {
-                // Room doesn't exist, user is the mentor
+            
+            const existingRoom = rooms.get(roomId);
+            
+            if (!existingRoom) {
+                console.log(`First user in room ${roomId}, assigning mentor role to ${socket.id}`);
                 rooms.set(roomId, {
-                    currentCode: '',
-                    studentCount: 0
+                    mentor: socket.id,
+                    students: new Set(),
+                    currentCode: null
                 });
+                socket.join(roomId);
                 socket.emit('role-assigned', { role: 'mentor' });
+            } else {
+                console.log(`Room ${roomId} already exists, assigning student role to ${socket.id}`);
+                existingRoom.students.add(socket.id);
+                socket.join(roomId);
+                
+                // Send role assignment first
+                socket.emit('role-assigned', { role: 'student' });
+                
+                // Then send current room state to the new user
+                socket.emit('room-state', {
+                    currentCode: existingRoom.currentCode,
+                    studentCount: existingRoom.students.size
+                });
+                
+                // Update student count for all users
+                io.to(roomId).emit('student-count', existingRoom.students.size);
             }
         });
 
         socket.on('code-update', ({ roomId, code }) => {
-            console.log(`Code update in room ${roomId}`);
-            const room = rooms.get(roomId);
-            if (room) {
+            console.log(`Received code update in room ${roomId}`);
+            // Store the current code in the room
+            if (rooms.has(roomId)) {
+                const room = rooms.get(roomId);
                 room.currentCode = code;
-                // Broadcast to ALL users in the room
-                io.to(roomId).emit('code-update', { code });
+                console.log(`Updated current code in room ${roomId}:`, code);
             }
+            // Broadcast to ALL users in the room
+            io.to(roomId).emit('code-update', { code });
         });
 
         socket.on('solution-success', ({ roomId }) => {
@@ -49,29 +60,30 @@ const setupSocketHandlers = (io) => {
             io.to(roomId).emit('solution-success');
         });
 
-        socket.on('disconnect', async () => {
+        socket.on('disconnect', () => {
             console.log('User disconnected:', socket.id);
-
-            // Find and clean up rooms
+            // Find and remove the user from their room
             for (const [roomId, room] of rooms.entries()) {
-                const sockets = await io.in(roomId).fetchSockets();
-                const socketIds = sockets.map(s => s.id);
-                
-                if (socketIds.includes(socket.id)) {
-                    // Update student count
-                    room.studentCount = Math.max(0, room.studentCount - 1);
+                if (room.mentor === socket.id) {
+                    console.log(`Mentor left room ${roomId}`);
+                    // Notify all users in the room before clearing
+                    io.to(roomId).emit('mentor-left');
                     
-                    // If no students left, remove the room
-                    if (room.studentCount === 0) {
-                        rooms.delete(roomId);
-                        console.log(`Room ${roomId} removed - no students left`);
-                    } else {
-                        // Notify remaining users about the updated student count
-                        io.to(roomId).emit('room-state', {
-                            currentCode: room.currentCode,
-                            studentCount: room.studentCount
-                        });
-                    }
+                    // Force disconnect all students in the room
+                    room.students.forEach(studentId => {
+                        const studentSocket = io.sockets.sockets.get(studentId);
+                        if (studentSocket) {
+                            studentSocket.disconnect(true); // Force disconnect the student
+                        }
+                    });
+                    
+                    // Clear the room state
+                    rooms.delete(roomId);
+                    break;
+                }
+                if (room.students.has(socket.id)) {
+                    room.students.delete(socket.id);
+                    io.to(roomId).emit('student-count', room.students.size);
                     break;
                 }
             }
