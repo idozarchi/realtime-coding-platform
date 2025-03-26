@@ -15,9 +15,8 @@ const corsOptions = {
 
 // CORS configuration for Socket.IO
 const socketCorsOptions = {
-    origin: true, // Allow all origins
-    methods: ["GET", "POST"],
-    credentials: true
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    methods: ["GET", "POST"]
 };
 
 module.exports = {
