@@ -1,27 +1,52 @@
 # Real-time Coding Platform
 
-A real-time coding platform that allows a mentor (Tom) to teach JavaScript to students through interactive code blocks.
+A real-time coding platform that enables interactive JavaScript teaching through code blocks. The platform supports multiple students learning simultaneously with a mentor.
 
 ## Features
 
-- Real-time code editing with syntax highlighting
+- Real-time code editing with Monaco Editor
 - Role-based access (Mentor/Student)
+- Multiple student support in each room
 - Student count tracking
 - Success detection when code matches solution
 - Responsive design
-- Modern UI with Monaco Editor
+- Modern UI with syntax highlighting
+- Real-time code synchronization between students
+- Solution showing/hiding for mentors
+- Success overlay for completed challenges
 
 ## Prerequisites
 
 - Node.js (v14 or higher)
-- MongoDB
+- MongoDB (v7.0 or higher)
 - npm or yarn
+
+## Technical Requirements
+
+### Backend Dependencies
+- Express v4.18.2
+- Socket.IO v4.6.1
+- Mongoose v7.0.3
+- CORS v2.8.5
+- dotenv v16.0.3
+
+### Frontend Dependencies
+- React v18.2.0
+- React Router v6.8.2
+- Monaco Editor v4.7.0
+- Socket.IO Client v4.6.1
+- Axios v1.3.4
+
+### Browser Support
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
 
 ## Setup
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/idozarchi/realtime-coding-platform.git
 cd realtime-coding-platform
 ```
 
@@ -33,7 +58,7 @@ npm install
 
 3. Create a `.env` file in the backend directory with the following variables:
 ```
-MONGO_URI=your_mongodb_connection_string
+MONGO_URI=mongodb+srv://idoz:<db_password>@bank.pximp.mongodb.net/?retryWrites=true&w=majority&appName=Bank
 PORT=5000
 FRONTEND_URL=http://localhost:3000
 ```
@@ -67,12 +92,42 @@ npm start
 
 ## Usage
 
-1. The first user to open a code block becomes the mentor (Tom)
+1. The first user to open a code block becomes the mentor
 2. Subsequent users become students
-3. The mentor can view the code in read-only mode
-4. Students can edit the code in real-time
+3. The mentor can:
+   - View all students' code in real-time
+   - Show/hide the solution
+   - Monitor student progress
+4. Students can:
+   - Edit code in real-time
+   - See their changes reflected immediately
+   - Submit solutions
+   - Reset their code
 5. When a student's code matches the solution, a success message appears
 6. If the mentor leaves, all students are redirected to the lobby
+
+## Project Structure
+
+```
+realtime-coding-platform/
+├── backend/
+│   ├── server.js
+│   ├── package.json
+│   └── .env
+└── frontend/
+    ├── src/
+    │   ├── components/
+    │   │   ├── CodeEditor/
+    │   │   ├── CodeBlockHeader/
+    │   │   ├── StudentControls/
+    │   │   └── SuccessOverlay/
+    │   ├── pages/
+    │   │   ├── Lobby/
+    │   │   └── CodeBlock/
+    │   └── hooks/
+    ├── package.json
+    └── .env
+```
 
 ## Deployment
 
@@ -82,27 +137,12 @@ The application can be deployed to various platforms:
 - Railway.app
 - Heroku
 - DigitalOcean
+- Render
 
 ### Frontend
 - Netlify
 - Vercel
 - GitHub Pages
-
-## Technologies Used
-
-- Frontend:
-  - React
-  - Socket.IO Client
-  - Monaco Editor
-  - React Router
-  - Axios
-
-- Backend:
-  - Node.js
-  - Express
-  - Socket.IO
-  - MongoDB
-  - Mongoose
 
 ## Contributing
 
