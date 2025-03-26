@@ -88,12 +88,11 @@ const CodeBlock: React.FC = () => {
             defaultLanguage="javascript"
             value={code}
             onChange={handleCodeChange}
-            theme="vs"
+            theme="vs-dark"
             options={{
               minimap: { enabled: false },
               fontSize: 14,
               lineNumbers: 'on',
-              scrollBeyond: false,
             }}
           />
         </div>
