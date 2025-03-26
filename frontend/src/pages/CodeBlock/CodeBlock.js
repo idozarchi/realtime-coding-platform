@@ -16,31 +16,22 @@ const CodeBlock = () => {
     const [studentCode, setStudentCode] = useState('');
     const [role, setRole] = useState(null);
     const [studentCount, setStudentCount] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [showSolution, setShowSolution] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showSolution, setShowSolution] = useState(false);
+    const [loading, setLoading] = useState(false);
     const hasReceivedRoomState = useRef(false);
-    const currentRole = useRef(null);
-
-    // Update the ref whenever role state changes
-    useEffect(() => {
-        currentRole.current = role;
-    }, [role]);
 
     const socketRef = useSocketConnection(
         id,
         (data) => {
             console.log('Role assigned:', data.role);
-            // Set role immediately when received
             setRole(data.role);
-            currentRole.current = data.role;
         },
         (data) => {
             console.log('Received code update:', data);
-            // Only update code based on current role
-            if (currentRole.current === 'student') {
+            if (role === 'student') {
                 setStudentCode(data.code);
-            } else if (currentRole.current === 'mentor' && !showSolution) {
+            } else if (role === 'mentor' && !showSolution) {
                 setCode(data.code);
             }
         },
@@ -49,7 +40,6 @@ const CodeBlock = () => {
             setStudentCount(data.studentCount || 0);
             if (data.currentCode) {
                 setStudentCode(data.currentCode);
-                setCode(data.currentCode);
                 hasReceivedRoomState.current = true;
             }
         },
@@ -65,24 +55,15 @@ const CodeBlock = () => {
     useEffect(() => {
         const fetchCodeBlock = async () => {
             try {
-                setLoading(true);
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/codeblocks/${id}`);
                 setCodeBlock(response.data);
-                // Only set initial code if we haven't received room state yet
                 if (!hasReceivedRoomState.current) {
                     setCode(response.data.initialCode);
                     setStudentCode(response.data.initialCode);
                 }
             } catch (error) {
                 console.error('Error fetching code block:', error);
-                if (error.response?.status === 404) {
-                    alert('Code block not found. Redirecting to lobby...');
-                } else {
-                    alert('Error loading code block. Please try again later.');
-                }
                 navigate('/');
-            } finally {
-                setLoading(false);
             }
         };
 
@@ -90,7 +71,7 @@ const CodeBlock = () => {
     }, [id, navigate]);
 
     const handleCodeChange = async (value) => {
-        if (currentRole.current === 'mentor') {
+        if (role === 'mentor') {
             return;
         }
 
@@ -108,7 +89,7 @@ const CodeBlock = () => {
             console.error('Error saving current code:', error);
         }
         
-        if (!showSolution && currentRole.current !== 'mentor' && codeBlock && value === codeBlock.solution) {
+        if (!showSolution && role !== 'mentor' && codeBlock && value === codeBlock.solution) {
             setShowSuccess(true);
             if (socketRef.current) {
                 socketRef.current.emit('solution-success', { roomId: id });
@@ -116,14 +97,26 @@ const CodeBlock = () => {
         }
     };
 
+    const handleShowSolution = () => {
+        setShowSolution(!showSolution);
+        if (!showSolution) {
+            setCode(codeBlock.solution);
+        } else {
+            // When hiding solution, set code to the current code in the room
+            setCode(codeBlock.currentCode || codeBlock.initialCode);
+        }
+    };
+
     const handleReset = () => {
+        setCode(codeBlock.initialCode);
         setStudentCode(codeBlock.initialCode);
+        setShowSuccess(false);
         if (socketRef.current) {
             socketRef.current.emit('code-update', { roomId: id, code: codeBlock.initialCode });
         }
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
         if (studentCode === codeBlock.solution) {
             setShowSuccess(true);
             if (socketRef.current) {
@@ -134,23 +127,15 @@ const CodeBlock = () => {
         }
     };
 
-    const handleShowSolution = () => {
-        setShowSolution(!showSolution);
-    };
-
-    if (loading) {
-        return <div className="loading">Loading...</div>;
-    }
-
     if (!codeBlock) {
-        return null;
+        return <div className="loading">Loading...</div>;
     }
 
     return (
         <div className="code-block-container">
             <CodeBlockHeader 
                 title={codeBlock.name}
-                role={currentRole.current}
+                role={role}
                 studentCount={studentCount}
                 onShowSolution={handleShowSolution}
                 showSolution={showSolution}
@@ -158,13 +143,13 @@ const CodeBlock = () => {
 
             <div className="editor-container">
                 <CodeEditor
-                    value={showSolution ? codeBlock.solution : (currentRole.current === 'student' ? studentCode : code)}
+                    value={showSolution ? codeBlock.solution : (role === 'student' ? studentCode : code)}
                     onChange={handleCodeChange}
-                    readOnly={currentRole.current === 'mentor'}
+                    readOnly={role === 'mentor'}
                 />
             </div>
 
-            {currentRole.current === 'student' && (
+            {role === 'student' && (
                 <StudentControls
                     onReset={handleReset}
                     onSubmit={handleSubmit}
@@ -172,7 +157,7 @@ const CodeBlock = () => {
                 />
             )}
 
-            {showSuccess && currentRole.current !== 'mentor' && (
+            {showSuccess && role !== 'mentor' && (
                 <SuccessOverlay onBackToLobby={() => navigate('/')} />
             )}
         </div>
