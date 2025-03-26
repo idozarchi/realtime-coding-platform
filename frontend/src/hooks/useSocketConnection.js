@@ -38,7 +38,7 @@ const useSocketConnection = (
         socketRef.current = socket;
 
         // Join room first
-        socket.emit('join-room', { roomId });
+        socket.emit('join-room', roomId);
 
         // Handle role assignment
         socket.on('role-assigned', (data) => {
