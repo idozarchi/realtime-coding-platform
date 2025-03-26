@@ -1,12 +1,9 @@
 .code-block-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
   background-color: #1e1e1e;
   color: #fff;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
 }
 
 .code-block-header {
@@ -38,18 +35,13 @@
 }
 
 .editor-container {
-  flex: 1;
-  background-color: #2d2d2d;
-  border: 1px solid #333;
-  border-radius: 8px;
-  margin: 1rem;
-  overflow: hidden;
   width: 100%;
   margin: 20px 0;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-grow: 1;
 }
 
 .student-controls {
