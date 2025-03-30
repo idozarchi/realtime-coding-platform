@@ -20,6 +20,12 @@ const CodeBlock = () => {
     const [showSolution, setShowSolution] = useState(false);
     const [loading, setLoading] = useState(false);
     const hasReceivedRoomState = useRef(false);
+    const isReceivingUpdate = useRef(false);
+    const editorDidMount = (editor) => {
+        // eslint-disable-next-line no-console
+        console.log("editorDidMount", editor, editor.getValue(), editor.getModel());
+        this.editor = editor;
+      };
 
     // Update title when codeBlock changes
     useEffect(() => {
@@ -34,7 +40,11 @@ const CodeBlock = () => {
         (data) => {
             console.log('Received code update:', data);
             if (role === 'student') {
+                console.log("this.editor");
+                //this.editor.setValue(data.code);
+                isReceivingUpdate.current = true;
                 setStudentCode(data.code);
+                isReceivingUpdate.current = false;
             } else if (role === 'mentor' && !showSolution) {
                 setCode(data.code);
             }
@@ -77,7 +87,8 @@ const CodeBlock = () => {
     }, [id, navigate]);
 
     const handleCodeChange = async (value) => {
-        if (role === 'mentor') {
+        console.log(isReceivingUpdate.current);
+        if (role === 'mentor' || isReceivingUpdate.current) {
             return;
         }
 
@@ -151,6 +162,7 @@ const CodeBlock = () => {
                 <CodeEditor
                     value={showSolution ? codeBlock.solution : (role === 'student' ? studentCode : code)}
                     onChange={handleCodeChange}
+                    editorDidMount={editorDidMount}
                     readOnly={role === 'mentor'}
                 />
             </div>

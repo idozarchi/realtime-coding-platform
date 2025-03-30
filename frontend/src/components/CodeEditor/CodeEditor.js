@@ -4,7 +4,8 @@ import './CodeEditor.css';
 
 const CodeEditor = ({ 
     value, 
-    onChange, 
+    onChange,
+    editorDidMount,
     readOnly, 
     language = "javascript",
     theme = "vs-dark"
@@ -15,6 +16,7 @@ const CodeEditor = ({
             defaultLanguage={language}
             value={value}
             onChange={onChange}
+            editorDidMount={editorDidMount}
             theme={theme}
             options={{
                 readOnly,
@@ -26,5 +28,7 @@ const CodeEditor = ({
         />
     );
 };
+
+
 
 export default CodeEditor; 
