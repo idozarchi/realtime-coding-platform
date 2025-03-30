@@ -21,10 +21,11 @@ const CodeBlock = () => {
     const [loading, setLoading] = useState(false);
     const hasReceivedRoomState = useRef(false);
     const isReceivingUpdate = useRef(false);
+    const editorRef = useRef(null);
     const editorDidMount = (editor) => {
         // eslint-disable-next-line no-console
         console.log("editorDidMount", editor, editor.getValue(), editor.getModel());
-        this.editor = editor;
+        editorRef.current = editor;
       };
 
     // Update title when codeBlock changes
@@ -40,13 +41,12 @@ const CodeBlock = () => {
         (data) => {
             console.log('Received code update:', data);
             if (role === 'student') {
-                console.log("this.editor");
-                //this.editor.setValue(data.code);
                 isReceivingUpdate.current = true;
-                setStudentCode(data.code);
+                editorRef.current.getModel().setValue(data.code);
                 isReceivingUpdate.current = false;
             } else if (role === 'mentor' && !showSolution) {
                 setCode(data.code);
+                codeBlock.currentCode = data.code;
             }
         },
         (data) => {
@@ -59,6 +59,7 @@ const CodeBlock = () => {
         },
         () => setShowSuccess(true),
         () => {
+            editorRef.current = null;
             alert('Mentor has left the room. You will be redirected to the lobby.');
             navigate('/');
         },

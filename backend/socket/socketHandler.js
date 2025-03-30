@@ -49,7 +49,7 @@ const setupSocketHandlers = (io) => {
                 console.log(`Updated current code in room ${roomId}:`, code);
             }
             // Broadcast to ALL users in the room
-            io.to(roomId).emit('code-update', { code });
+            socket.broadcast.to(roomId).emit('code-update', { code });
         });
 
         socket.on('solution-success', ({ roomId }) => {

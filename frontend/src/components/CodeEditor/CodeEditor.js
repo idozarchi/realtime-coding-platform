@@ -16,7 +16,7 @@ const CodeEditor = ({
             defaultLanguage={language}
             value={value}
             onChange={onChange}
-            editorDidMount={editorDidMount}
+            onMount={editorDidMount}
             theme={theme}
             options={{
                 readOnly,
